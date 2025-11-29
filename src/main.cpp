@@ -94,14 +94,65 @@ void competition_initialize() {}
 //  AUTONOMOUS
 // ===========================
 void autonomous() {
-    chassis.setPose(-67.244, -22.929, 90);
+    // Simple IMU-based auton with timed driving
+    // This does NOT rely on tracking wheels / full odometry.
 
-    // Move forward to score
-    chassis.moveToPose(-27.866, -22.389, 90, 2000);
+    // Make sure everything is stopped at the start
+    left_motors.move(0);
+    right_motors.move(0);
+    intake.move(0);
+    outtake.move(0);
+
+    // 1) Drive forward for ~24 inches (tune the time on the field)
+    left_motors.move(100);
+    right_motors.move(100);
+    pros::delay(1000);        // adjust for your robot's speed
+    left_motors.move(0);
+    right_motors.move(0);
+
+    // 2) turn 270 degrees to face the balls
+    chassis.turnToHeading(270, 2000);   // 2 second timeout
+
+    // 3) put piston in port B down to deploy intake
+    pros::ADIDigitalOut pistonB('B');
+    pistonB.set_value(true);   // extend
+
+    // 4) Drive forward to the balls
+    left_motors.move(100);
+    right_motors.move(100);
+    pros::delay(800);         // tune distance
+    left_motors.move(0);
+    right_motors.move(0);
+
+    // 2) Run intake to pull in balls while stationary
     intake.move(127);
+    pros::delay(1000);         // tune for how many balls you want
+    intake.move(0);
 
-    // Move & angle
-    chassis.moveToPose(-10.109, -10.109, 51.667, 1000);
+    // 3) Turn to 90 degrees using the IMU
+    // This uses lemlib + imu only, no tracking wheels required.
+    chassis.turnToHeading(90, 2000);   // 2 second timeout
+
+
+
+    // 5) Outtake to score
+    outtake.move(127);
+    pros::delay(1000);        // tune how long to outtake
+    outtake.move(0);
+
+
+    // 4) Drive forward again toward the goal
+    left_motors.move(100);
+    right_motors.move(100);
+    pros::delay(800);         // tune distance
+    left_motors.move(0);
+    right_motors.move(0);
+
+    // Stop everything at the end
+    left_motors.move(0);
+    right_motors.move(0);
+    intake.move(0);
+    outtake.move(0);
 }
 
 // ===========================
