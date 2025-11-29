@@ -137,44 +137,6 @@ void autonomous() {
     pros::delay(1000);   // 1000 ms = 1 second
     left_motors.move(0);
     right_motors.move(0);
-
-    // Turn RIGHT 90 degrees using IMU
-    left_motors.move(127);
-    right_motors.move(-127);
-    pros::delay(500);   // tune this value!
-    left_motors.move(0);
-    right_motors.move(0);
-
-    left_motors.move(127);
-    right_motors.move(127);
-    pros::delay(1000);   // 1000 ms = 1 second
-    left_motors.move(0);
-    right_motors.move(0);
-
-    left_motors.move(127);
-    right_motors.move(-127);
-    pros::delay(500);   // tune this value!
-    left_motors.move(0);
-    right_motors.move(0);
-
-    left_motors.move(127);
-    right_motors.move(127);
-    pros::delay(500);   // 1000 ms = 1 second
-    left_motors.move(0);
-    right_motors.move(0);
-    pros::ADIDigitalOut pistonB('B');
-    pistonB.set_value(true);
-    intake.move(127);
-    pros::delay(2000);
-    intake.move(0);
-    left_motors.move(127);
-    right_motors.move(127);
-    pros::delay(500);   // 1000 ms = 1 second
-    left_motors.move(0);
-    right_motors.move(0);
-    outtake.move(127);
-    pros::delay(1000);
-    outtake.move(0);
 }
 
 // ===========================
