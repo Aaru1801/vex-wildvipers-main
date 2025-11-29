@@ -110,7 +110,7 @@ void autonomous() {
     left_motors.move(0);
     right_motors.move(0);
 
-    // 2) turn 270 degrees to face the balls
+    // 2) turn 270 degrees left to face balls
     chassis.turnToHeading(270, 2000);   // 2 second timeout
 
     // 3) put piston in port B down to deploy intake
