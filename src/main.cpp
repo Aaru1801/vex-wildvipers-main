@@ -24,20 +24,15 @@ pros::Motor intake(7, pros::MotorGearset::blue);
 pros::Motor outtake(8, pros::MotorGearset::blue);
 
 // ===========================
-//  IMU
-// ===========================
-pros::Imu imu(10);
-
-// ===========================
-//  DRIVETRAIN (LEMLIB)
+//  DRIVETRAIN (LEMLIB) – NO IMU / ODOM
 // ===========================
 lemlib::Drivetrain drivetrain(
     &left_motors,
     &right_motors,
     10,                             // track width (inches)
     lemlib::Omniwheel::NEW_4,       // 4" omni wheels
-    360,                            // drivetrain RPM (blue cart @ 4” wheels)
-    2                               // horizontal drift
+    600,                            // drivetrain RPM
+    0                               // horizontal drift
 );
 
 // LATERAL PID
@@ -58,12 +53,13 @@ lemlib::ControllerSettings angular_controller(
     0
 );
 
+// no tracking wheels, no IMU
 lemlib::OdomSensors sensors(
     nullptr,   // vertical tracking wheel
     nullptr,   // vertical tracking wheel 2
     nullptr,   // horizontal tracking wheel
     nullptr,   // horizontal tracking wheel 2
-    &imu       // IMU pointer
+    nullptr    // IMU pointer (none)
 );
 
 // CHASSIS
@@ -82,73 +78,18 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 // ===========================
 void initialize() {
     pros::lcd::initialize();
-    pros::lcd::set_text(1, "Initializing...");
-    chassis.calibrate();      // calibrate IMU+odom
-    pros::lcd::set_text(1, "Calibrated!");
+    pros::lcd::set_text(1, "Robot Ready");
+    // no IMU, no chassis.calibrate()
 }
 
 void disabled() {}
 void competition_initialize() {}
 
 // ===========================
-//  AUTONOMOUS
+//  AUTONOMOUS (EMPTY)
 // ===========================
 void autonomous() {
-    // Simple IMU-based auton with timed driving
-    // This does NOT rely on tracking wheels / full odometry.
-
-    // Make sure everything is stopped at the start
-    left_motors.move(0);
-    right_motors.move(0);
-    intake.move(0);
-    outtake.move(0);
-
-    // 1) Drive forward for ~24 inches (tune the time on the field)
-    left_motors.move(100);
-    right_motors.move(100);
-    pros::delay(1000);        // adjust for your robot's speed
-    left_motors.move(0);
-    right_motors.move(0);
-
-    // 2) turn 270 degrees left to face balls
-    chassis.turnToHeading(270, 2000);   // 2 second timeout
-
-    // 3) put piston in port B down to deploy intake
-    pros::ADIDigitalOut pistonB('B');
-    pistonB.set_value(true);   // extend
-
-    // 4) Drive forward to the balls
-    left_motors.move(100);
-    right_motors.move(100);
-    pros::delay(800);         // tune distance
-    left_motors.move(0);
-    right_motors.move(0);
-
-    // 2) Run intake to pull in balls while stationary
-    intake.move(127);
-    pros::delay(1000);         // tune for how many balls you want
-    intake.move(0);
-
-    // 3) Turn to 90 degrees using the IMU
-    // This uses lemlib + imu only, no tracking wheels required.
-    chassis.turnToHeading(90, 2000);   // 2 second timeout
-
-
-
-    // 5) Outtake to score
-    outtake.move(127);
-    pros::delay(1000);        // tune how long to outtake
-    outtake.move(0);
-
-
-    // 4) Drive forward again toward the goal
-    left_motors.move(100);
-    right_motors.move(100);
-    pros::delay(800);         // tune distance
-    left_motors.move(0);
-    right_motors.move(0);
-
-    // Stop everything at the end
+    // Intentionally left blank – no auton
     left_motors.move(0);
     right_motors.move(0);
     intake.move(0);
@@ -174,7 +115,8 @@ void opcontrol() {
         // ====================
         int leftY  = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-        int throttle = -leftY;      // up = forward
+
+        int throttle = leftY;       // change to -leftY if forward feels backwards
         int turn     = -rightX;     // right = turn right
 
         chassis.curvature(throttle, turn);
@@ -182,10 +124,10 @@ void opcontrol() {
         // ====================
         // INTAKE (PORT 7) - L1/L2
         // ====================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
             intake.move(127);
         }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
             intake.move(-127);
         }
         else {
@@ -195,10 +137,10 @@ void opcontrol() {
         // ====================
         // OUTTAKE (PORT 8) - R1/R2
         // ====================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
             outtake.move(127);
         }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
             outtake.move(-127);
         }
         else {
@@ -228,12 +170,7 @@ void opcontrol() {
         }
         lastA = aNow;
 
-        // ====================
-        // RUN AUTON IN DRIVER
-        // ====================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-            autonomous();
-        }
+        // no X button auton trigger anymore
 
         pros::delay(20);
     }
