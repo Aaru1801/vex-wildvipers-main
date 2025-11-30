@@ -1,220 +1,155 @@
 #include "main.h"
-#include "lemlib/api.hpp"
-#include "pros/adi.hpp"
-#include "pros/imu.hpp"
-#include "pros/llemu.hpp"
-#include "pros/motors.hpp"
-#include <cmath>
+#include "lemlib/api.hpp" // IWYU pragma: keep
 
-// ===========================
-//  MOTOR SETUP
-// ===========================
-
-// LEFT DRIVE = ports 1, 2, 3 (ALL BLUE)
-pros::MotorGroup left_motors({1, 2, 3}, pros::MotorGearset::blue);
-
-// RIGHT DRIVE = ports 4,5,6 (ALL BLUE)
-pros::MotorGroup right_motors({-4, -5, -6}, pros::MotorGearset::blue);
-// NEGATIVE because right side must be reversed
-
-// INTAKE = port 7
-pros::Motor intake(7, pros::MotorGearset::blue);
-
-// OUTTAKE = port 8
-pros::Motor outtake(8, pros::MotorGearset::blue);
-
-// ===========================
-//  IMU (must come BEFORE OdomSensors)
-// ===========================
-pros::Imu imu(10);
-
-// ===========================
-//  DRIVETRAIN SETUP (LEMLIB)
-// ===========================
-lemlib::Drivetrain drivetrain(
-    &left_motors,
-    &right_motors,
-    10,                        // track width
-    lemlib::Omniwheel::NEW_4,  // 4" omni wheels
-    600,                       // RPM
-    0                          // horizontal drift
-);
-
-lemlib::ControllerSettings lateral_controller(
-    10, 0, 3,
-    0,
-    1, 100,
-    3, 250,
-    0
-);
-
-lemlib::ControllerSettings angular_controller(
-    4, 0, 10,
-    0,
-    1, 100,
-    2, 250,
-    0
-);
-
-lemlib::OdomSensors sensors(
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    &imu    // now valid: imu is declared above
-);
-
-lemlib::Chassis chassis(
-    drivetrain,
-    lateral_controller,
-    angular_controller,
-    sensors
-);
-
-// ===========================
-//  IMU TURN HELPER
-// ===========================
-void turnDegrees(double targetDeg, int speed = 80) {
-    // Zero the IMU rotation so current heading = 0
-    imu.tare();
-    pros::delay(50); // small delay to apply tare
-
-    const double kTolerance = 2.0;    // degrees
-    const int    kDelayMs   = 10;     // loop delay
-
-    while (true) {
-        double current = imu.get_rotation();        // current angle in degrees
-        double error   = targetDeg - current;
-
-        if (std::fabs(error) <= kTolerance) {
-            break; // close enough
-        }
-
-        int dir = (error > 0) ? 1 : -1; // which way to turn
-
-        left_motors.move(dir * speed);
-        right_motors.move(-dir * speed);
-
-        pros::delay(kDelayMs);
-    }
-
-    // stop motors at the end
-    left_motors.move(0);
-    right_motors.move(0);
-}
-
-// ===========================
-// CONTROLLER
-// ===========================
+// controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
-// ===========================
-//  INITIALIZE
-// ===========================
+// motor groups
+// LEFT DRIVE = ports 1, 2, 3 (ALL BLUE)
+pros::MotorGroup leftMotors({1, 2, 3}, pros::MotorGearset::blue);
+
+// RIGHT DRIVE = ports 4,5,6 (ALL BLUE)
+pros::MotorGroup rightMotors({-4, -5, -6}, pros::MotorGearset::blue);
+
+// Inertial Sensor on port 10
+pros::Imu imu(10);
+
+// tracking wheels
+// horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
+pros::Rotation horizontalEnc(20);
+// vertical tracking wheel encoder. Rotation sensor, port 11, reversed
+pros::Rotation verticalEnc(-11);
+// horizontal tracking wheel. 2.75" diameter, 5.75" offset, back of the robot (negative)
+lemlib::TrackingWheel horizontal(&horizontalEnc, lemlib::Omniwheel::NEW_2, 0);
+// vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
+lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0);
+
+// drivetrain settings
+lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
+                              &rightMotors, // right motor group
+                              10, // 10 inch track width
+                              lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
+                              600, // drivetrain rpm is 600
+                              2 // horizontal drift is 2. If we had traction wheels, it would have been 8
+);
+
+// lateral motion controller
+lemlib::ControllerSettings linearController(10, // proportional gain (kP)
+                                            0, // integral gain (kI)
+                                            3, // derivative gain (kD)
+                                            0, // anti windup
+                                            0, // small error range, in inches
+                                            0, // small error range timeout, in milliseconds
+                                            0, // large error range, in inches
+                                            0, // large error range timeout, in milliseconds
+                                            0 // maximum acceleration (slew)
+);
+
+// angular motion controller
+lemlib::ControllerSettings angularController(2, // proportional gain (kP)
+                                             0, // integral gain (kI)
+                                             10, // derivative gain (kD)
+                                             0, // anti windup
+                                             0, // small error range, in degrees
+                                             0, // small error range timeout, in milliseconds
+                                             0, // large error range, in degrees
+                                             0, // large error range timeout, in milliseconds
+                                             0 // maximum acceleration (slew)
+);
+
+// sensors for odometry
+lemlib::OdomSensors sensors(&vertical, // vertical tracking wheel
+                            nullptr, // vertical tracking wheel 2, set to nullptr as we don't have a second one
+                            &horizontal, // horizontal tracking wheel
+                            nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
+                            &imu // inertial sensor
+);
+
+// input curve for throttle input during driver control
+lemlib::ExpoDriveCurve throttleCurve(3, // joystick deadband out of 127
+                                     10, // minimum output where drivetrain will move out of 127
+                                     1.019 // expo curve gain
+);
+
+// input curve for steer input during driver control
+lemlib::ExpoDriveCurve steerCurve(3, // joystick deadband out of 127
+                                  10, // minimum output where drivetrain will move out of 127
+                                  1.019 // expo curve gain
+);
+
+// create the chassis
+lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors, &throttleCurve, &steerCurve);
+
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
 void initialize() {
-    pros::lcd::initialize();
-    pros::lcd::set_text(0, "Calibrating IMU...");
+    pros::lcd::initialize(); // initialize brain screen
+    chassis.calibrate(); // calibrate sensors
 
-    imu.reset();                      // start IMU calibration
-    while (imu.is_calibrating()) {    // wait until done
-        pros::delay(20);
-    }
+    // the default rate is 50. however, if you need to change the rate, you
+    // can do the following.
+    // lemlib::bufferedStdout().setRate(...);
+    // If you use bluetooth or a wired connection, you will want to have a rate of 10ms
 
-    pros::lcd::set_text(0, "Robot Ready");
+    // for more information on how the formatting for the loggers
+    // works, refer to the fmtlib docs
+
+    // thread to for brain screen and position logging
+    pros::Task screenTask([&]() {
+        while (true) {
+            // print robot location to the brain screen
+            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+            // log position telemetry
+            lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
+            // delay to save resources
+            pros::delay(50);
+        }
+    });
 }
 
+/**
+ * Runs while the robot is disabled
+ */
 void disabled() {}
+
+/**
+ * runs after initialize if the robot is connected to field control
+ */
 void competition_initialize() {}
 
-// ===========================
-//  AUTONOMOUS
-// ===========================
-void autonomous() {
-    // Example: drive forward 1 second, turn right 90°, then stop
+// get a path used for pure pursuit
+// this needs to be put outside a function
+ASSET(example_txt); // '.' replaced with "_" to make c++ happy
 
-    left_motors.move(127);
-    right_motors.move(127);
-    pros::delay(1000);   // 1000 ms = 1 second
-    left_motors.move(0);
-    right_motors.move(0);
+/**
+ * Runs during auto
+ *
+ * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
+ */
+void autonomous() {
+    chassis.setPose(0, 0, 0); // set pose to (0,0,0)
+    chassis.moveToPoint(0, 10, 99999); // move 10 inches forward
 }
 
-// ===========================
-//  DRIVER CONTROL
-// ===========================
+/**
+ * Runs in driver control
+ */
 void opcontrol() {
-
-    pros::ADIDigitalOut pistonA('A');
-    pros::ADIDigitalOut pistonB('B');
-
-    bool pistB = false;
-    bool lastA = false;
-
-    const int DEADBAND = 10;  // Helps go straight
-
+    // controller
+    // loop to continuously update motors
     while (true) {
-
-        // ==========================
-        // DRIVE
-        // ==========================
-        int leftY  = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+        // get joystick positions
+        int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-
-        // Deadband to stop drifting
-        if (std::abs(leftY)  < DEADBAND) leftY  = 0;
-        if (std::abs(rightX) < DEADBAND) rightX = 0;
-
-        int throttle = leftY;     // forward/back
-        int turn     = -rightX;   // left/right turn
-
-        chassis.curvature(throttle, turn);
-
-        // ==========================
-        // INTAKE (R2 = forward, R1 = reverse)
-        // ==========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-            intake.move(127);
-        }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            intake.move(-127);
-        }
-        else {
-            intake.move(0);
-        }
-
-        // ==========================
-        // OUTTAKE (L2 = forward, L1 = reverse)
-        // ==========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-            outtake.move(100);
-        }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-            outtake.move(-100);
-        }
-        else {
-            outtake.move(0);
-        }
-
-        // ==========================
-        // PNEUMATIC A (UP/DOWN)
-        // ==========================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP)) {
-            pistonA.set_value(true);   // extend
-        }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)) {
-            pistonA.set_value(false);  // retract
-        }
-
-        // ==========================
-        // PNEUMATIC B (Button A)
-        // ==========================
-        bool aNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
-        if (aNow && !lastA) {
-            pistB = !pistB;
-            pistonB.set_value(pistB);
-        }
-        lastA = aNow;
-
-        pros::delay(20);
+        // move the chassis with curvature drive
+        chassis.arcade(leftY, rightX);
+        // delay to save resources
+        pros::delay(10);
     }
 }
