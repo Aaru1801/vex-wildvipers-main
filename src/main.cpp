@@ -1,5 +1,8 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
+#include "lemlib/chassis/chassis.hpp"
+ASSET(right_safe_path_txt);   // name = file name with . replaced by _
+extern lemlib::Chassis chassis;
 
 // controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
@@ -10,6 +13,12 @@ pros::MotorGroup leftMotors({1, 2, 3}, pros::MotorGearset::blue);
 
 // RIGHT DRIVE = ports 4,5,6 (ALL BLUE)
 pros::MotorGroup rightMotors({-4, -5, -6}, pros::MotorGearset::blue);
+
+// INTAKE = port 7
+pros::Motor intake(7, pros::MotorGearset::blue);
+
+// OUTTAKE = port 8
+pros::Motor outtake(8, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
 pros::Imu imu(10);
@@ -28,7 +37,7 @@ lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0);
 lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               &rightMotors, // right motor group
                               10, // 10 inch track width
-                              lemlib::Omniwheel::NEW_275, // using new 2.75" omnis
+                              lemlib::Omniwheel::NEW_275, // using new 2.75" omni
                               600, // drivetrain rpm is 600
                               2 // horizontal drift is 2. If we had traction wheels, it would have been 8
 );
@@ -122,34 +131,103 @@ void disabled() {}
  * runs after initialize if the robot is connected to field control
  */
 void competition_initialize() {}
-
-// get a path used for pure pursuit
-// this needs to be put outside a function
-ASSET(example_txt); // '.' replaced with "_" to make c++ happy
-
 /**
  * Runs during auto
  *
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    chassis.setPose(0, 0, 0); // set pose to (0,0,0)
-    chassis.moveToPoint(0, 10, 99999); // move 10 inches forward
+    chassis.setPose(-159.71, -29.446, 135);
+    chassis.follow(
+        right_safe_path_txt,
+        12,        // lookahead
+        15000,     // timeout
+        true,      // async = true (don't block)
+        true       // log
+    );
 }
+
+bool pistonAState = false;
+bool lastButtonState = false;
 
 /**
  * Runs in driver control
  */
 void opcontrol() {
-    // controller
-    // loop to continuously update motors
+    pros::ADIDigitalOut pistonA('A');
+    pros::ADIDigitalOut pistonB('B');
+
+    bool pistA = false;   // state of piston A (UP arrow)
+    bool lastUp = false;  // last state of UP button
+
+    bool pistB = false;   // state of piston B (A button)
+    bool lastA = false;   // last state of A button
+
+    const int DEADBAND = 10;  // Helps go straight
+
     while (true) {
-        // get joystick positions
-        int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+
+        // ==========================================
+        // JOYSTICK DRIVE CONTROL
+        // ==========================================
+        int leftY  = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
         int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-        // move the chassis with curvature drive
-        chassis.arcade(leftY, rightX);
-        // delay to save resources
-        pros::delay(10);
+
+        // Deadband to stop drifting
+        if (std::abs(leftY)  < DEADBAND) leftY  = 0;
+        if (std::abs(rightX) < DEADBAND) rightX = 0;
+
+        int throttle = leftY;     // forward/back
+        int turn     = -rightX;   // left/right turn
+
+        chassis.curvature(throttle, turn);
+
+        // ==========================================
+        // INTAKE (R2 = forward, R1 = reverse)
+        // ==========================================
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+            intake.move(127);
+        }
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
+            intake.move(-127);
+        }
+        else {
+            intake.move(0);
+        }
+
+        // ==========================================
+        // OUTTAKE (L2 = forward, L1 = reverse)
+        // ==========================================
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+            outtake.move(100);
+        }
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+            outtake.move(-100);
+        }
+        else {
+            outtake.move(0);
+        }
+
+        // =============================================
+        // LOWER GOAL SCORER PNEUMATIC A (UP ARROW)
+        // =============================================
+        bool upNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
+        if (upNow && !lastUp) {        // just pressed
+            pistA = !pistA;            // toggle state
+            pistonA.set_value(pistA);  // apply
+        }
+        lastUp = upNow;
+
+        // =============================================
+        // MATCH LOADER PNEUMATIC B (A BUTTON)
+        // =======================================
+        bool aNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+        if (aNow && !lastA) {          // just pressed
+            pistB = !pistB;            // toggle state
+            pistonB.set_value(pistB);  // apply
+        }
+        lastA = aNow;
+
+        pros::delay(20);
     }
 }
