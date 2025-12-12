@@ -1,6 +1,7 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "lemlib/chassis/chassis.hpp"
+#include "pros/optical.hpp" // Added include for optical sensor
 ASSET(right_safe_path_txt);   // name = file name with . replaced by _
 extern lemlib::Chassis chassis;
 
@@ -22,6 +23,8 @@ pros::Motor outtake(8, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
 pros::Imu imu(10);
+// Optical sensor on port 9 (change port if needed)
+pros::Optical optical(11);
 
 // tracking wheels
 // horizontal tracking wheel encoder. Rotation sensor, port 20, not reversed
@@ -99,6 +102,10 @@ void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
 
+    // turn on optical sensor LED so it can see color
+    optical.set_led_pwm(100); // 0–100% brightness
+    pros::delay(200);         // short delay for sensor to stabilize
+
     // the default rate is 50. however, if you need to change the rate, you
     // can do the following.
     // lemlib::bufferedStdout().setRate(...);
@@ -111,9 +118,22 @@ void initialize() {
     pros::Task screenTask([&]() {
         while (true) {
             // print robot location to the brain screen
-            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
-            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(0, "X: %f", chassis.getPose().x);      // x
+            pros::lcd::print(1, "Y: %f", chassis.getPose().y);      // y
             pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+
+            // read optical sensor
+            double hue = optical.get_hue();              // 0–360 degrees
+            int proximity = optical.get_proximity();     // larger = closer object
+
+            // simple blue detection (tune thresholds as needed)
+            bool isBlue = (proximity > 80) && (hue > 180.0 && hue < 260.0);
+
+            // show optical sensor debug + blue detection on brain screen
+            pros::lcd::print(3, "Hue: %.1f", hue);
+            pros::lcd::print(4, "Prox: %d", proximity);
+            pros::lcd::print(5, "Blue ball: %s", isBlue ? "YES" : "NO");
+
             // log position telemetry
             lemlib::telemetrySink()->info("Chassis pose: {}", chassis.getPose());
             // delay to save resources
@@ -138,13 +158,8 @@ void competition_initialize() {}
  */
 void autonomous() {
     chassis.setPose(-159.71, -29.446, 135);
-    chassis.follow(
-        right_safe_path_txt,
-        12,        // lookahead
-        15000,     // timeout
-        true,      // async = true (don't block)
-        true       // log
-    );
+    // rotate 90 degrees to face the goal
+    chassis.turnToHeading(90, 4000);
 }
 
 bool pistonAState = false;
