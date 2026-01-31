@@ -52,15 +52,16 @@ lemlib::ControllerSettings linearController(10, // proportional gain (kP)
 );
 
 // angular motion controller
-lemlib::ControllerSettings angularController(2, // proportional gain (kP)
-                                             0, // integral gain (kI)
-                                             13, // derivative gain (kD)
-                                             0, // anti windup
-                                             0, // small error range, in degrees
-                                             0, // small error range timeout, in milliseconds
-                                             0, // large error range, in degrees
-                                             0, // large error range timeout, in milliseconds
-                                             10 // maximum acceleration (slew)
+lemlib::ControllerSettings angularController(
+                                            0.8,  // kP  (start low)
+                                            0.0,  // kI
+                                            6.0,  // kD
+                                            0,
+                                            1.0,  // smallError (deg)
+                                            150,  // smallErrorTimeout (ms)
+                                            5.0,  // largeError (deg)
+                                            400,  // largeErrorTimeout (ms)
+                                            0
 );
 
 // sensors for odometry
