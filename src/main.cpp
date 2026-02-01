@@ -36,11 +36,11 @@ lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
                               15, // 15 inch track width
                               lemlib::Omniwheel::NEW_275, // using new 2.75" omni
                               600, // drivetrain rpm is 600
-                              5 // horizontal drift is 5 cuz of 2 traction wheels. If we had all traction wheels, it would have been 8
+                              2 // horizontal drift is 5 cuz of 2 traction wheels. If we had all traction wheels, it would have been 8
 );
 
 // lateral motion controller
-lemlib::ControllerSettings linearController(10, // proportional gain (kP)
+lemlib::ControllerSettings linearController(1.82, // proportional gain (kP)
                                             0, // integral gain (kI)
                                             5, // derivative gain (kD)
                                             0, // anti windup
@@ -48,20 +48,20 @@ lemlib::ControllerSettings linearController(10, // proportional gain (kP)
                                             0, // small error range timeout, in milliseconds
                                             0, // large error range, in inches
                                             0, // large error range timeout, in milliseconds
-                                            10 // maximum acceleration (slew)
+                                            3 // maximum acceleration (slew)
 );
 
 // angular motion controller
 lemlib::ControllerSettings angularController(
-                                            0.8,  // kP  (start low)
+                                            2,  // kP  (start low)
                                             0.0,  // kI
                                             6.0,  // kD
                                             0,
                                             1.0,  // smallError (deg)
-                                            150,  // smallErrorTimeout (ms)
+                                            200,  // smallErrorTimeout (ms)
                                             5.0,  // largeError (deg)
-                                            400,  // largeErrorTimeout (ms)
-                                            0
+                                            600,  // largeErrorTimeout (ms)
+                                            3
 );
 
 // sensors for odometry
@@ -137,10 +137,32 @@ void competition_initialize() {}
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    // set position to x:0, y:0, heading:0
-    chassis.setPose(0,0,0);
-    // turn to face heading 90 with a very long timeout
-    chassis.turnToHeading(90, 400);
+    /* CODEGEN EXPORT: LemLib */
+
+    chassis.setPose(-48.000000, 18.000000, 0.000000);
+
+    chassis.moveToPoint(-48.0, 24.0, 552);
+    pros::delay(400);
+    chassis.moveToPoint(-48.0, 48.0, 1104);
+    chassis.waitUntil(8.64);
+    intake.move(127);
+    pros::ADIDigitalOut pistonA('A');
+    pistonA.set_value(true);
+    chassis.waitUntilDone();
+    pros::delay(200);
+    chassis.turnToHeading(270, 4000);
+    leftMotors.move(127);
+    rightMotors.move(127);
+    pros::delay(200);
+    leftMotors.move(0);
+    rightMotors.move(0);
+    pros::delay(2000);
+    leftMotors.move(127);
+    rightMotors.move(127);
+    pros::delay(400);
+    leftMotors.move(0);
+    rightMotors.move(0);
+// Estimated total time: 6.23 s
 
 }
 
@@ -174,7 +196,7 @@ void opcontrol() {
         if (std::abs(leftY)  < DEADBAND) leftY  = 0;
         if (std::abs(rightX) < DEADBAND) rightX = 0;
 
-        int throttle = -leftY;     // forward/back
+        int throttle = leftY;     // forward/back
         int turn     = rightX;   // left/right turn
 
         chassis.curvature(throttle, turn);
@@ -183,10 +205,10 @@ void opcontrol() {
         // INTAKE (R2 = forward, R1 = reverse)
         // ==========================================
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-            intake.move(127);
+            intake.move(100);
         }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            intake.move(-127);
+        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+            intake.move(-100);
         }
         else {
             intake.move(0);
@@ -195,7 +217,7 @@ void opcontrol() {
         // ==========================================
         // OUTTAKE (L2 = forward, L1 = reverse)
         // ==========================================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
             outtake.move(100);
         }
         else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
