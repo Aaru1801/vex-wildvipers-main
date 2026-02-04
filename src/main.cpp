@@ -2,7 +2,10 @@
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "lemlib/chassis/chassis.hpp"
 #include "pros/rtos.hpp"
+#include <fstream>
 #include <sys/_intsup.h>
+#include <string>
+#include "nlohmann/json.hpp"
 
 ASSET(right_safe_path_txt);   // name = file name with . replaced by _
 extern lemlib::Chassis chassis;
@@ -95,6 +98,84 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
+ nlohmann::json mainPath;
+
+namespace {
+// JSON path tuning
+constexpr double kFieldPx = 600.0;   // JSON coordinate width/height
+constexpr double kFieldIn = 72.0;   // field size in inches (12ft)
+constexpr double kOriginPx = kFieldPx / 2.0;
+constexpr double kInPerPx = kFieldIn / kFieldPx;
+constexpr int kDefaultMoveTimeoutMs = 2000;
+
+struct FieldPoint {
+    double x;
+    double y;
+};
+
+bool readPos(const nlohmann::json& pos, FieldPoint& out) {
+    if (!pos.is_array() || pos.size() < 2 || !pos[0].is_number() || !pos[1].is_number()) {
+        return false;
+    }
+
+    const double px = pos[0].get<double>();
+    const double py = pos[1].get<double>();
+
+    out.x = (px - kOriginPx) * kInPerPx;
+    out.y = (kOriginPx - py) * kInPerPx;
+    return true;
+}
+
+void runAction(const nlohmann::json& action,
+               pros::ADIDigitalOut& pistonA,
+               pros::ADIDigitalOut& pistonB) {
+    if (!action.is_object() || !action.contains("type") || !action["type"].is_string()) {
+        return;
+    }
+
+    const std::string type = action["type"].get<std::string>();
+
+    if (type == "wait") {
+        const double seconds = action.value("s", 0.0);
+        if (seconds > 0.0) {
+            pros::delay(static_cast<int>(seconds * 1000.0));
+        }
+        return;
+    }
+
+    if (type == "intake") {
+        const int power = action.value("power", 127);
+        const int ms = action.value("ms", 0);
+        intake.move(power);
+        if (ms > 0) pros::delay(ms);
+        intake.move(0);
+        return;
+    }
+
+    if (type == "outtake") {
+        const int power = action.value("power", 127);
+        const int ms = action.value("ms", 0);
+        outtake.move(power);
+        if (ms > 0) pros::delay(ms);
+        outtake.move(0);
+        return;
+    }
+
+    if (type == "pistonA") {
+        const bool value = action.value("value", true);
+        pistonA.set_value(value);
+        return;
+    }
+
+    if (type == "pistonB") {
+        const bool value = action.value("value", true);
+        pistonB.set_value(value);
+        return;
+    }
+}
+} // namespace
+
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
     chassis.calibrate(); // calibrate sensors
@@ -121,6 +202,22 @@ void initialize() {
             pros::delay(50);
         }
     });
+
+    std::ifstream mainPathFile("/static/Ninja.json");
+    if (!mainPathFile.is_open()) {
+        std::cerr << "Error: Could not open the file Ninja.json" << std::endl;
+        return;
+    }
+
+    // Parse the JSON data from the stream
+    try {
+        mainPathFile >> mainPath;
+    } catch (const std::exception& e) {
+        std::cerr << "Error parsing Ninja.json: " << e.what() << std::endl;
+    }
+
+    // Close the file
+    mainPathFile.close();
 }
 
 /**
@@ -139,30 +236,44 @@ void competition_initialize() {}
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
+    pros::ADIDigitalOut pistonA('A');
     pros::ADIDigitalOut pistonB('B');
 
-    chassis.setPose(0, 0, 0);
+    if (mainPath.is_null() || !mainPath.contains("nodes") || !mainPath["nodes"].is_array()) {
+        pros::lcd::print(3, "Auton JSON missing nodes");
+        return;
+    }
 
-    chassis.moveToPoint(0, 34, 1500);
-    chassis.waitUntilDone();
-    pros::delay(750);
-    chassis.turnToHeading(270, 1000, {.maxSpeed = 150});
+    if (mainPath.contains("initial") && mainPath["initial"].is_object()) {
+        const auto& initial = mainPath["initial"];
+        if (initial.contains("position")) {
+            FieldPoint start{};
+            if (readPos(initial["position"], start)) {
+                const double heading = initial.value("heading", 0.0);
+                chassis.setPose(start.x, start.y, heading);
+            }
+        }
+    }
 
-    pistonB.set_value(true);
-    pros::delay(1000);
+    for (const auto& node : mainPath["nodes"]) {
+        if (!node.is_object() || !node.contains("pos")) {
+            continue;
+        }
 
-    chassis.moveToPoint(-20, 34, 750);
-    chassis.waitUntilDone();
+        FieldPoint target{};
+        if (!readPos(node["pos"], target)) {
+            continue;
+        }
 
-    chassis.moveToPoint(30, 34, 1000);
-    chassis.waitUntilDone();
-    pros::delay(500);
+        chassis.moveToPoint(target.x, target.y, kDefaultMoveTimeoutMs);
+        chassis.waitUntilDone();
 
-    intake.move(127);
-    outtake.move(127);
-    pros::delay(3000);
-    intake.move(0);
-    outtake.move(0);
+        if (node.contains("actions") && node["actions"].is_array()) {
+            for (const auto& action : node["actions"]) {
+                runAction(action, pistonA, pistonB);
+            }
+        }
+    }
 }
 
 bool pistonAState = false;

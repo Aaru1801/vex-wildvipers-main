@@ -47,6 +47,17 @@
             "pos": [
                 416,
                 421
+            ],
+            "actions": [
+                {
+                    "type": "intake",
+                    "power": 127,
+                    "ms": 1000
+                },
+                {
+                    "type": "pistonB",
+                    "value": true
+                }
             ]
         },
         {
