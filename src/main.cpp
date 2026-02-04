@@ -1,6 +1,8 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "lemlib/chassis/chassis.hpp"
+#include "pros/rtos.hpp"
+#include <sys/_intsup.h>
 
 ASSET(right_safe_path_txt);   // name = file name with . replaced by _
 extern lemlib::Chassis chassis;
@@ -22,11 +24,11 @@ pros::Motor intake(1, pros::MotorGearset::blue);
 pros::Motor outtake(11, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
-pros::Imu imu(13);
+pros::Imu imu(12);
 
 // tracking wheels
 // vertical tracking wheel encoder. Rotation sensor, port 12, reversed
-pros::Rotation verticalEnc(-12);
+pros::Rotation verticalEnc(-13);
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0);
 
@@ -40,34 +42,34 @@ lemlib::Drivetrain drivetrain(&leftMotors, // left motor group
 );
 
 // lateral motion controller
-lemlib::ControllerSettings linearController(1.82, // proportional gain (kP)
+lemlib::ControllerSettings linearController(20, // proportional gain (kP)
                                             0, // integral gain (kI)
-                                            5, // derivative gain (kD)
+                                            10, // derivative gain (kD)
                                             0, // anti windup
                                             0, // small error range, in inches
                                             0, // small error range timeout, in milliseconds
                                             0, // large error range, in inches
                                             0, // large error range timeout, in milliseconds
-                                            3 // maximum acceleration (slew)
+                                            20 // maximum acceleration (slew)
 );
 
 // angular motion controller
 lemlib::ControllerSettings angularController(
                                             2,  // kP  (start low)
-                                            0.0,  // kI
-                                            6.0,  // kD
+                                            0,  // kI
+                                            10,  // kD
                                             0,
-                                            1.0,  // smallError (deg)
-                                            200,  // smallErrorTimeout (ms)
-                                            5.0,  // largeError (deg)
-                                            600,  // largeErrorTimeout (ms)
-                                            3
+                                            0,  // smallError (deg)
+                                            0,  // smallErrorTimeout (ms)
+                                            0,  // largeError (deg)
+                                            0,  // largeErrorTimeout (ms)
+                                            20
 );
 
 // sensors for odometry
 lemlib::OdomSensors sensors(&vertical, // vertical tracking wheel
                             nullptr, // vertical tracking wheel 2, set to nullptr as we don't have a second one
-                            nullptr, // horizontal tracking wheel
+                            nullptr, // horizontal tr   acking wheel
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
                             &imu // inertial sensor
 );
@@ -137,33 +139,30 @@ void competition_initialize() {}
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
 void autonomous() {
-    /* CODEGEN EXPORT: LemLib */
+    pros::ADIDigitalOut pistonB('B');
 
-    chassis.setPose(-48.000000, 18.000000, 0.000000);
+    chassis.setPose(0, 0, 0);
 
-    chassis.moveToPoint(-48.0, 24.0, 552);
-    pros::delay(400);
-    chassis.moveToPoint(-48.0, 48.0, 1104);
-    chassis.waitUntil(8.64);
-    intake.move(127);
-    pros::ADIDigitalOut pistonA('A');
-    pistonA.set_value(true);
+    chassis.moveToPoint(0, 34, 1500);
     chassis.waitUntilDone();
-    pros::delay(200);
-    chassis.turnToHeading(270, 4000);
-    leftMotors.move(127);
-    rightMotors.move(127);
-    pros::delay(200);
-    leftMotors.move(0);
-    rightMotors.move(0);
-    pros::delay(2000);
-    leftMotors.move(127);
-    rightMotors.move(127);
-    pros::delay(400);
-    leftMotors.move(0);
-    rightMotors.move(0);
-// Estimated total time: 6.23 s
+    pros::delay(750);
+    chassis.turnToHeading(270, 1000, {.maxSpeed = 150});
 
+    pistonB.set_value(true);
+    pros::delay(1000);
+
+    chassis.moveToPoint(-20, 34, 750);
+    chassis.waitUntilDone();
+
+    chassis.moveToPoint(30, 34, 1000);
+    chassis.waitUntilDone();
+    pros::delay(500);
+
+    intake.move(127);
+    outtake.move(127);
+    pros::delay(3000);
+    intake.move(0);
+    outtake.move(0);
 }
 
 bool pistonAState = false;
@@ -232,8 +231,8 @@ void opcontrol() {
         // =============================================
         bool upNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
         if (upNow && !lastUp) {        // just pressed
-            pistA = !pistA;            // toggle state
-            pistonA.set_value(pistA);  // apply
+            pistB = !pistB;            // toggle state
+            pistonB.set_value(pistB);  // apply
         }
         lastUp = upNow;
 
@@ -242,8 +241,8 @@ void opcontrol() {
         // =======================================
         bool aNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
         if (aNow && !lastA) {          // just pressed
-            pistB = !pistB;            // toggle state
-            pistonB.set_value(pistB);  // apply
+            pistA = !pistA;            // toggle state
+            pistonA.set_value(pistA);  // apply
         }
         lastA = aNow;
 
