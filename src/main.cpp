@@ -1,6 +1,7 @@
 #include "main.h"
 #include "lemlib/api.hpp" // IWYU pragma: keep
 #include "lemlib/chassis/chassis.hpp"
+#include "pros/misc.h"
 #include "pros/rtos.hpp"
 #include <fstream>
 #include <sys/_intsup.h>
@@ -15,23 +16,23 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
 // LEFT DRIVE = ports 1, 2, 19 (ALL BLUE)
-pros::MotorGroup leftMotors({-8, -9, -10}, pros::MotorGearset::blue);
+pros::MotorGroup leftMotors({-11, -12, -13}, pros::MotorGearset::blue);
 
 // RIGHT DRIVE = ports 4,5,10 (ALL BLUE)
-pros::MotorGroup rightMotors({4, 5, 6}, pros::MotorGearset::blue);
+pros::MotorGroup rightMotors({8, 9, 10}, pros::MotorGearset::blue);
 
 // INTAKE = port 7
 pros::Motor intake(1, pros::MotorGearset::blue);
 
 // OUTTAKE = port 8
-pros::Motor outtake(11, pros::MotorGearset::blue);
+pros::Motor outtake(15, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
-pros::Imu imu(12);
+pros::Imu imu(19);
 
 // tracking wheels
 // vertical tracking wheel encoder. Rotation sensor, port 12, reversed
-pros::Rotation verticalEnc(-13);
+pros::Rotation verticalEnc(-18);
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0);
 
@@ -99,7 +100,7 @@ lemlib::Chassis chassis(drivetrain, linearController, angularController, sensors
  * to keep execution time for this mode under a few seconds.
  */
 
- nlohmann::json mainPath;
+nlohmann::json mainPath;
 
 namespace {
 // JSON path tuning
@@ -129,7 +130,9 @@ bool readPos(const nlohmann::json& pos, FieldPoint& out) {
 
 void runAction(const nlohmann::json& action,
                pros::ADIDigitalOut& pistonA,
-               pros::ADIDigitalOut& pistonB) {
+               pros::ADIDigitalOut& pistonB,
+               pros::ADIDigitalOut& pistonC
+               ) {
     if (!action.is_object() || !action.contains("type") || !action["type"].is_string()) {
         return;
     }
@@ -171,6 +174,12 @@ void runAction(const nlohmann::json& action,
     if (type == "pistonB") {
         const bool value = action.value("value", true);
         pistonB.set_value(value);
+        return;
+    }
+
+    if (type == "pistonC") {
+        const bool value = action.value("value", true);
+        pistonC.set_value(value);
         return;
     }
 }
@@ -235,45 +244,137 @@ void competition_initialize() {}
  *
  * This is an example autonomous routine which demonstrates a lot of the features LemLib has to offer
  */
+void left_autonomous() {
+    bool pistonAState = false;
+    bool lastButtonState = false;
+    pros::ADIDigitalOut pistonA('A'); // de-score mech piston
+    pros::ADIDigitalOut pistonB('B'); // middle goal scorer piston
+    pros::ADIDigitalOut pistonC('C'); // match loader piston
+
+
+    chassis.setPose(0,0,0);
+    pros::delay(100);
+    chassis.moveToPose(0, 40.3, 0, 1200, {.maxSpeed = 80});
+    chassis.waitUntilDone();
+    // align to matchloader
+    chassis.turnToHeading(-90, 1200);
+    pros::delay(500);
+    pistonC.set_value(true);
+    pros::delay(500);
+    // move to left matchloader
+    chassis.moveToPoint(-17, 40.3, 1200, {.maxSpeed = 50});
+    chassis.waitUntilDone();
+    intake.move(127);
+    pros::delay(2400);
+    chassis.waitUntilDone();
+    // move to left long goal
+    chassis.moveToPoint(71, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    // outtake the loads
+    outtake.move(127);
+    pros::delay(2400);
+    intake.move(0);
+    outtake.move(0);
+}
+
+void right_autonomous() {
+    bool pistonAState = false;
+    bool lastButtonState = false;
+    pros::ADIDigitalOut pistonA('A'); // de-score mech piston
+    pros::ADIDigitalOut pistonB('B'); // middle goal scorer piston
+    pros::ADIDigitalOut pistonC('C'); // match loader piston
+
+
+    chassis.setPose(0,0,0);
+    pros::delay(100);
+    chassis.moveToPose(0, 41, 0, 1200, {.maxSpeed = 80});
+    chassis.waitUntilDone();
+    // align to matchloader
+    chassis.turnToHeading(89, 1200);
+    pros::delay(500);
+    pistonC.set_value(true);
+    pros::delay(500);
+    // move to right matchloader
+    chassis.moveToPoint(15, 42, 1100, {.maxSpeed = 50});
+    chassis.waitUntilDone();
+    // intake the loads
+    intake.move(127);
+    pros::delay(1800);
+    // move to right long goal
+    chassis.moveToPoint(-26, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.waitUntilDone();
+    // outtake the loads
+    outtake.move(127);
+    pros::delay(3600);
+    intake.move(0);
+    outtake.move(0);
+}
+
+void skills_autonomous() {
+    bool pistonAState = false;
+    bool lastButtonState = false;
+    pros::ADIDigitalOut pistonA('A'); // de-score mech piston
+    pros::ADIDigitalOut pistonB('B'); // middle goal scorer piston
+    pros::ADIDigitalOut pistonC('C'); // match loader piston
+
+
+    chassis.setPose(0,0,0);
+    pros::delay(100);
+    chassis.moveToPose(0, 40.3, 0, 1200, {.maxSpeed = 80});
+    chassis.waitUntilDone();
+    // align to matchloader
+    chassis.turnToHeading(-90, 1200);
+    pros::delay(500);
+    pistonC.set_value(true);
+    pros::delay(500);
+    // move to left matchloader
+    chassis.moveToPoint(-17, 40.3, 1200, {.maxSpeed = 50});
+    chassis.waitUntilDone();
+    intake.move(127);
+    pros::delay(2400);
+    chassis.waitUntilDone();
+    // move to left long goal
+    chassis.moveToPoint(71, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    // outtake the loads
+    outtake.move(127);
+    pros::delay(2400);
+    intake.move(0);
+    outtake.move(0);
+    chassis.waitUntilDone();
+    pros::delay(500);
+    // end left autonomous, star moving to opposite side of field
+    chassis.moveToPoint(66, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    chassis.turnToHeading(90, 1200);
+    chassis.waitUntilDone();
+    chassis.moveToPoint(66, 56, 1500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    chassis.moveToPoint(140, 56, 2500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    chassis.turnToHeading(90, 1200);
+    chassis.waitUntilDone();
+    chassis.moveToPoint(140, 42, 2500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    chassis.turnToHeading(-90, 1200);
+    chassis.waitUntilDone();
+    pistonC.set_value(true);
+    pros::delay(500);
+    chassis.moveToPoint(160, 42, 2500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    intake.move(127);
+    pros::delay(2400);
+    chassis.waitUntilDone();
+    chassis.moveToPoint(130, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
+    chassis.waitUntilDone();
+    outtake.move(127);
+    pros::delay(3600);
+    intake.move(0);
+    outtake.move(0);
+}
+
 void autonomous() {
-    pros::ADIDigitalOut pistonA('A');
-    pros::ADIDigitalOut pistonB('B');
-
-    if (mainPath.is_null() || !mainPath.contains("nodes") || !mainPath["nodes"].is_array()) {
-        pros::lcd::print(3, "Auton JSON missing nodes");
-        return;
-    }
-
-    if (mainPath.contains("initial") && mainPath["initial"].is_object()) {
-        const auto& initial = mainPath["initial"];
-        if (initial.contains("position")) {
-            FieldPoint start{};
-            if (readPos(initial["position"], start)) {
-                const double heading = initial.value("heading", 0.0);
-                chassis.setPose(start.x, start.y, heading);
-            }
-        }
-    }
-
-    for (const auto& node : mainPath["nodes"]) {
-        if (!node.is_object() || !node.contains("pos")) {
-            continue;
-        }
-
-        FieldPoint target{};
-        if (!readPos(node["pos"], target)) {
-            continue;
-        }
-
-        chassis.moveToPoint(target.x, target.y, kDefaultMoveTimeoutMs);
-        chassis.waitUntilDone();
-
-        if (node.contains("actions") && node["actions"].is_array()) {
-            for (const auto& action : node["actions"]) {
-                runAction(action, pistonA, pistonB);
-            }
-        }
-    }
+    left_autonomous();
 }
 
 bool pistonAState = false;
@@ -285,12 +386,16 @@ bool lastButtonState = false;
 void opcontrol() {
     pros::ADIDigitalOut pistonA('A');
     pros::ADIDigitalOut pistonB('B');
+    pros::ADIDigitalOut pistonC('C');
 
     bool pistA = false;   // state of piston A (UP arrow)
     bool lastUp = false;  // last state of UP button
 
     bool pistB = false;   // state of piston B (A button)
     bool lastA = false;   // last state of A button
+
+    bool pistC = false;   // state of piston C (DOWN arrow)
+    bool lastDown = false; // last state of DOWN button
 
     const int DEADBAND = 10;  // Helps go straight
 
@@ -338,7 +443,7 @@ void opcontrol() {
         }
 
         // =============================================
-        // LOWER GOAL SCORER PNEUMATIC A (UP ARROW)
+        // MIDDLE GOAL SCORER PNEUMATIC A (UP ARROW)
         // =============================================
         bool upNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
         if (upNow && !lastUp) {        // just pressed
@@ -348,14 +453,24 @@ void opcontrol() {
         lastUp = upNow;
 
         // =============================================
-        // MATCH LOADER PNEUMATIC B (A BUTTON)
+        // MATCHLOADER PNEUMATIC B (A BUTTON)
         // =======================================
-        bool aNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+        bool aNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
         if (aNow && !lastA) {          // just pressed
             pistA = !pistA;            // toggle state
             pistonA.set_value(pistA);  // apply
         }
         lastA = aNow;
+
+        // =============================================
+        // DE-SCORE MECH PNEUMATIC C (DOWN ARROW)
+        // =======================================
+        bool bNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
+        if (bNow && !lastDown) {        // just pressed
+            pistC = !pistC;                // toggle state
+            pistonC.set_value(pistC);      // apply
+        }
+        lastDown = bNow;
 
         pros::delay(20);
     }
