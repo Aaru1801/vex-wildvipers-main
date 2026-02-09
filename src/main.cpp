@@ -262,7 +262,7 @@ void left_autonomous() {
     pistonC.set_value(true);
     pros::delay(500);
     // move to left matchloader
-    chassis.moveToPoint(-17, 40.3, 1200, {.maxSpeed = 50});
+    chassis.moveToPoint(-18, 40.3, 1200, {.maxSpeed = 50});
     chassis.waitUntilDone();
     intake.move(127);
     pros::delay(2400);
@@ -287,21 +287,21 @@ void right_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    chassis.moveToPose(0, 41, 0, 1200, {.maxSpeed = 80});
+    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
-    chassis.turnToHeading(89, 1200);
+    chassis.turnToHeading(90, 1200);
     pros::delay(500);
     pistonC.set_value(true);
     pros::delay(500);
     // move to right matchloader
-    chassis.moveToPoint(15, 42, 1100, {.maxSpeed = 50});
+    chassis.moveToPoint(20, 42, 1100, {.maxSpeed = 50});
     chassis.waitUntilDone();
     // intake the loads
     intake.move(127);
-    pros::delay(1800);
+    pros::delay(2400);
     // move to right long goal
-    chassis.moveToPoint(-26, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(-26, 40.3, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
     // outtake the loads
     outtake.move(127);
@@ -320,55 +320,47 @@ void skills_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    chassis.moveToPose(0, 40.3, 0, 1200, {.maxSpeed = 80});
+    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
-    chassis.turnToHeading(-90, 1200);
+    chassis.turnToHeading(90, 1200);
     pros::delay(500);
     pistonC.set_value(true);
     pros::delay(500);
-    // move to left matchloader
-    chassis.moveToPoint(-17, 40.3, 1200, {.maxSpeed = 50});
+    // move to right matchloader
+    chassis.moveToPoint(22, 42, 1100, {.maxSpeed = 50});
     chassis.waitUntilDone();
+    // intake the loads
     intake.move(127);
-    pros::delay(2400);
-    chassis.waitUntilDone();
-    // move to left long goal
-    chassis.moveToPoint(71, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
+    pros::delay(1800);
+    // move to right long goal
+    chassis.moveToPoint(-26, 40.3, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
     // outtake the loads
     outtake.move(127);
-    pros::delay(2400);
+    pros::delay(3600);
     intake.move(0);
     outtake.move(0);
+    pros::delay(500);
+    pistonC.set_value(false);
+    pros::delay(2000);
+    // end right autonomous, start moving back and park
+    chassis.setPose(0,0,0);
+    chassis.moveToPoint(15, 40.3, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
     pros::delay(500);
-    // end left autonomous, star moving to opposite side of field
-    chassis.moveToPoint(66, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
-    chassis.waitUntilDone();
-    chassis.turnToHeading(90, 1200);
-    chassis.waitUntilDone();
-    chassis.moveToPoint(66, 56, 1500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
-    chassis.waitUntilDone();
-    chassis.moveToPoint(140, 56, 2500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
-    chassis.waitUntilDone();
-    chassis.turnToHeading(90, 1200);
-    chassis.waitUntilDone();
-    chassis.moveToPoint(140, 42, 2500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
-    chassis.waitUntilDone();
     chassis.turnToHeading(-90, 1200);
     chassis.waitUntilDone();
-    pistonC.set_value(true);
+    pros::delay(1500);
+    chassis.setPose(0,0,0);
+    chassis.moveToPoint(0, -40, 3500, {.forwards=false,.minSpeed = 100});
+    chassis.waitUntilDone();
     pros::delay(500);
-    chassis.moveToPoint(160, 42, 2500, {.forwards = true, .maxSpeed = 80, .minSpeed = 50});
+    chassis.turnToHeading(90, 1200);
     chassis.waitUntilDone();
     intake.move(127);
-    pros::delay(2400);
-    chassis.waitUntilDone();
-    chassis.moveToPoint(130, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
-    chassis.waitUntilDone();
     outtake.move(127);
-    pros::delay(3600);
+    pros::delay(9900);
     intake.move(0);
     outtake.move(0);
 }
