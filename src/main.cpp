@@ -4,6 +4,7 @@
 #include "pros/misc.h"
 #include "pros/rtos.hpp"
 #include <fstream>
+#include <algorithm>
 #include <sys/_intsup.h>
 #include <string>
 #include "nlohmann/json.hpp"
@@ -448,7 +449,7 @@ void opcontrol() {
         lastUp = upNow;
 
         // =============================================
-        // MATCHLOADER PNEUMATIC B (A BUTTON)
+        // DE-SCORE MECH PNEUMATIC B (B BUTTON)
         // =======================================
         bool aNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_B);
         if (aNow && !lastA) {          // just pressed
@@ -458,7 +459,7 @@ void opcontrol() {
         lastA = aNow;
 
         // =============================================
-        // DE-SCORE MECH PNEUMATIC C (DOWN ARROW)
+        // MATCHLOADER PNEUMATIC C (A BUTTON)
         // =======================================
         bool bNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_A);
         if (bNow && !lastDown) {        // just pressed
