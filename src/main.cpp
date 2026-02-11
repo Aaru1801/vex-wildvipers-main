@@ -254,7 +254,7 @@ void left_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    chassis.moveToPose(0, 40.3, 0, 1200, {.maxSpeed = 80});
+    chassis.moveToPose(0, 40.3, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
     chassis.turnToHeading(-90, 1200);
@@ -262,13 +262,13 @@ void left_autonomous() {
     pistonC.set_value(true);
     pros::delay(500);
     // move to left matchloader
-    chassis.moveToPoint(-18, 40.3, 1200, {.maxSpeed = 50});
+    chassis.moveToPoint(-18, 40.3, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
     intake.move(127);
     pros::delay(2400);
     chassis.waitUntilDone();
     // move to left long goal
-    chassis.moveToPoint(71, 42, 1500, {.forwards = false, .maxSpeed = 80, .minSpeed = 50});
+    chassis.moveToPoint(71, 42, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
     // outtake the loads
     outtake.move(127);
@@ -287,7 +287,7 @@ void right_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 80});
+    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
     chassis.turnToHeading(90, 1200);
@@ -295,7 +295,7 @@ void right_autonomous() {
     pistonC.set_value(true);
     pros::delay(500);
     // move to right matchloader
-    chassis.moveToPoint(20, 42, 1100, {.maxSpeed = 50});
+    chassis.moveToPoint(20, 42, 1100, {.maxSpeed = 80});
     chassis.waitUntilDone();
     // intake the loads
     intake.move(127);
@@ -396,17 +396,20 @@ void opcontrol() {
         // ==========================================
         // JOYSTICK DRIVE CONTROL
         // ==========================================
-        int leftY  = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+        int forward = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+        int turn    = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
-        // Deadband to stop drifting
-        if (std::abs(leftY)  < DEADBAND) leftY  = 0;
-        if (std::abs(rightX) < DEADBAND) rightX = 0;
+        if (std::abs(forward) < DEADBAND) forward = 0;
+        if (std::abs(turn) < DEADBAND) turn = 0;
 
-        int throttle = leftY;     // forward/back
-        int turn     = rightX;   // left/right turn
+        int leftPower  = forward + turn;
+        int rightPower = forward - turn;
 
-        chassis.curvature(throttle, turn);
+        leftPower  = std::max(-127, std::min(127, leftPower));
+        rightPower = std::max(-127, std::min(127, rightPower));
+
+        leftMotors.move(leftPower);
+        rightMotors.move(rightPower);
 
         // ==========================================
         // INTAKE (R2 = forward, R1 = reverse)
