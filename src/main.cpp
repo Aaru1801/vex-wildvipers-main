@@ -263,7 +263,7 @@ void left_autonomous() {
     pistonC.set_value(true);
     pros::delay(500);
     // move to left matchloader
-    chassis.moveToPoint(-18, 40.3, 1200, {.maxSpeed = 80});
+    chassis.moveToPoint(-19, 40.3, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
     intake.move(127);
     pros::delay(2400);
