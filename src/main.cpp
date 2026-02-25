@@ -321,53 +321,16 @@ void skills_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 80});
-    chassis.waitUntilDone();
-    // align to matchloader
-    chassis.turnToHeading(90, 1200);
-    pros::delay(500);
-    pistonC.set_value(true);
-    pros::delay(500);
-    // move to right matchloader
-    chassis.moveToPoint(22, 42, 1100, {.maxSpeed = 50});
-    chassis.waitUntilDone();
-    // intake the loads
     intake.move(127);
-    pros::delay(1800);
-    // move to right long goal
-    chassis.moveToPoint(-26, 40.3, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    // move to mid goal balls left of the field
+    chassis.moveToPoint(0, 21, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
-    // outtake the loads
-    outtake.move(127);
-    pros::delay(3600);
     intake.move(0);
-    outtake.move(0);
-    pros::delay(500);
-    pistonC.set_value(false);
-    pros::delay(2000);
-    // end right autonomous, start moving back and park
-    chassis.setPose(0,0,0);
-    chassis.moveToPoint(15, 40.3, 1200, {.maxSpeed = 80});
-    chassis.waitUntilDone();
-    pros::delay(500);
-    chassis.turnToHeading(-90, 1200);
-    chassis.waitUntilDone();
-    pros::delay(1500);
-    chassis.setPose(0,0,0);
-    chassis.moveToPoint(0, -40, 3500, {.forwards=false,.minSpeed = 100});
-    chassis.waitUntilDone();
-    pros::delay(500);
-    chassis.turnToHeading(90, 1200);
-    chassis.waitUntilDone();
-    intake.move(127);
-    outtake.move(127);
-    pros::delay(9900);
-    intake.move(0);
-    outtake.move(0);
+
 }
 
 void autonomous() {
-    left_autonomous();
+    skills_autonomous();
 }
 
 bool pistonAState = false;
