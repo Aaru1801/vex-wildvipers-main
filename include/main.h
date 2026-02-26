@@ -77,4 +77,20 @@ void opcontrol(void);
 //#include <iostream>
 #endif
 
+// ============================================================
+// AUTON ROUTINES (defined in main.cpp)
+// ============================================================
+#ifdef __cplusplus
+void left_autonomous();
+void right_autonomous();
+void solo_awp_autonomous();
+void skills_autonomous();
+
+// ============================================================
+// AUTON SELECTOR (defined in autoselector_config.cpp)
+// ============================================================
+void start_autoselector();
+void run_selected_auton();
+#endif
+
 #endif  // _PROS_MAIN_H_

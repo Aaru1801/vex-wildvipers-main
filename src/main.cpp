@@ -8,6 +8,7 @@
 #include <sys/_intsup.h>
 #include <string>
 #include "nlohmann/json.hpp"
+#include "autoselector/autoselector.hpp"
 
 ASSET(right_safe_path_txt);   // name = file name with . replaced by _
 extern lemlib::Chassis chassis;
@@ -185,9 +186,12 @@ void runAction(const nlohmann::json& action,
     }
 }
 } // namespace
+void start_autoselector();
+void run_selected_auton();
 
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
+    start_autoselector();
     chassis.calibrate(); // calibrate sensors
 
     // the default rate is 50. however, if you need to change the rate, you
@@ -255,21 +259,21 @@ void left_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    chassis.moveToPose(0, 40.3, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
+    chassis.moveToPose(0, 39, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
-    chassis.turnToHeading(-90, 1200);
+    chassis.turnToHeading(270, 1200);
     pros::delay(500);
     pistonC.set_value(true);
     pros::delay(500);
     // move to left matchloader
-    chassis.moveToPoint(-19, 40.3, 1200, {.maxSpeed = 80});
+    chassis.moveToPoint(-14, 39, 1200, {.maxSpeed = 80});
     chassis.waitUntilDone();
     intake.move(127);
     pros::delay(2400);
     chassis.waitUntilDone();
     // move to left long goal
-    chassis.moveToPoint(71, 42, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(26, 39, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
     // outtake the loads
     outtake.move(127);
@@ -321,16 +325,39 @@ void skills_autonomous() {
 
     chassis.setPose(0,0,0);
     pros::delay(100);
-    intake.move(127);
-    // move to mid goal balls left of the field
-    chassis.moveToPoint(0, 21, 1200, {.maxSpeed = 80});
+    chassis.moveToPose(0, 39, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
-    intake.move(0);
+    // align to matchloader
+    chassis.turnToHeading(270, 1200);
+    pros::delay(500);
+    pistonC.set_value(true);
+    pros::delay(500);
+    // move to left matchloader
+    chassis.moveToPoint(-14, 39, 1200, {.maxSpeed = 80});
+    chassis.waitUntilDone();
+    intake.move(127);
+    pros::delay(2400);
+    intake.move(12);
+    chassis.waitUntilDone();
+    // move to left long goal
+    chassis.moveToPoint(-5, 39, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.waitUntilDone();
+    pros::delay(500);
+    pistonC.set_value(false);
+    chassis.turnToHeading(-180, 250);
+    chassis.waitUntilDone();
+    pros::delay(250);
+    chassis.moveToPoint(5, 50, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.waitUntilDone();
+}
 
+void solo_awp_autonomous() {
+    // example of a simple autonomous routine that just moves the robot forward
+    // TO BE DONE: replace with your actual AWP autonomous
 }
 
 void autonomous() {
-    skills_autonomous();
+    run_selected_auton();
 }
 
 bool pistonAState = false;
