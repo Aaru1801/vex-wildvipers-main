@@ -316,39 +316,84 @@ void right_autonomous() {
 }
 
 void skills_autonomous() {
-    bool pistonAState = false;
-    bool lastButtonState = false;
-    pros::ADIDigitalOut pistonA('A'); // de-score mech piston
-    pros::ADIDigitalOut pistonB('B'); // middle goal scorer piston
-    pros::ADIDigitalOut pistonC('C'); // match loader piston
+    /* CODEGEN EXPORT: LemLib */
 
+    chassis.setPose(-47.280000, -6.960000, 180.000000);
 
-    chassis.setPose(0,0,0);
-    pros::delay(100);
-    chassis.moveToPose(0, 39, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
-    chassis.waitUntilDone();
-    // align to matchloader
-    chassis.turnToHeading(270, 1200);
-    pros::delay(500);
-    pistonC.set_value(true);
-    pros::delay(500);
-    // move to left matchloader
-    chassis.moveToPoint(-14, 39, 1200, {.maxSpeed = 80});
-    chassis.waitUntilDone();
-    intake.move(127);
-    pros::delay(2400);
-    intake.move(12);
-    chassis.waitUntilDone();
-    // move to left long goal
-    chassis.moveToPoint(-5, 39, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(500);
-    pistonC.set_value(false);
-    chassis.turnToHeading(-180, 250);
-    chassis.waitUntilDone();
-    pros::delay(250);
-    chassis.moveToPoint(5, 50, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
+    chassis.moveToPoint(-47.28, -48.48, 885, {.forwards = true});
+    chassis.turnToHeading(270.98776, 350);
+    chassis.moveToPoint(-61.44, -48.24, 488, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(88.97697, 493);
+    chassis.moveToPoint(-48.0, -48.0, 480, {.forwards = true});
+    chassis.turnToHeading(180.0, 351);
+    chassis.moveToPoint(-48.0, -57.6, 406, {.forwards = true});
+    chassis.turnToHeading(90.0, 349);
+    chassis.moveToPoint(48.24, -57.6, 1644, {.forwards = true});
+    chassis.turnToHeading(0.0, 349);
+    chassis.moveToPoint(48.24, -48.24, 401, {.forwards = true});
+    chassis.turnToHeading(270.0, 349);
+    chassis.moveToPoint(36.24, -48.24, 453, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(90.0, 496);
+    chassis.moveToPoint(57.84, -48.24, 608, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(270.0, 496);
+    chassis.moveToPoint(36.0, -48.24, 612, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(88.876697, 494);
+    chassis.moveToPoint(48.24, -48.0, 458, {.forwards = true});
+    chassis.turnToHeading(359.421274, 348);
+    chassis.moveToPoint(48.0, -24.24, 638, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(91.877877, 353);
+    chassis.moveToPoint(62.64, -24.72, 501, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(359.71063, 353);
+    chassis.moveToPoint(62.4, 22.8, 968, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(273.751729, 341);
+    chassis.moveToPoint(47.76, 23.76, 501, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(1.123303, 343);
+    chassis.moveToPoint(48.24, 48.24, 648, {.forwards = true});
+    chassis.turnToHeading(90.0, 346);
+    chassis.moveToPoint(57.36, 48.24, 395, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(272.516876, 492);
+    chassis.moveToPoint(35.52, 49.2, 612, {.forwards = true});
+    pros::delay(275);
+    chassis.turnToHeading(5.492325, 354);
+    chassis.moveToPoint(36.72, 61.68, 464, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(269.514454, 360);
+    chassis.moveToPoint(-48.24, 60.96, 1488, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(178.939088, 350);
+    chassis.moveToPoint(-48.0, 48.0, 471, {.forwards = true});
+    pros::delay(275);
+    chassis.turnToHeading(90.0, 347);
+    chassis.moveToPoint(-31.68, 48.0, 529, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(269.497418, 495);
+    chassis.moveToPoint(-59.04, 47.76, 688, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(89.432734, 496);
+    chassis.moveToPoint(-34.8, 48.0, 645, {.forwards = true});
+    pros::delay(2640);
+    chassis.turnToHeading(270.0, 495);
+    chassis.moveToPoint(-48.0, 48.0, 476, {.forwards = true});
+    chassis.turnToHeading(180.0, 349);
+    chassis.moveToPoint(-48.0, 30.24, 552, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(270.939191, 350);
+    chassis.moveToPoint(-62.64, 30.48, 501, {.forwards = true});
+    pros::delay(111);
+    chassis.turnToHeading(180.33703, 350);
+    chassis.moveToPoint(-62.88, -10.32, 875, {.forwards = true});
+
+// Estimated total time: 45.60 s
+
 }
 
 void solo_awp_autonomous() {
