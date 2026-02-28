@@ -8,9 +8,8 @@
 #include <sys/_intsup.h>
 #include <string>
 #include "nlohmann/json.hpp"
-#include "autoselector/autoselector.hpp"
 
-ASSET(right_safe_path_txt);   // name = file name with . replaced by _
+// ASSET(right_safe_path_txt);   // name = file name with . replaced by _
 extern lemlib::Chassis chassis;
 
 // controller
@@ -18,10 +17,10 @@ pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // motor groups
 // LEFT DRIVE = ports 1, 2, 19 (ALL BLUE)
-pros::MotorGroup leftMotors({-11, -12, -13}, pros::MotorGearset::blue);
+pros::MotorGroup leftMotors({-11, -10, -13}, pros::MotorGearset::blue);
 
 // RIGHT DRIVE = ports 4,5,10 (ALL BLUE)
-pros::MotorGroup rightMotors({8, 9, 10}, pros::MotorGearset::blue);
+pros::MotorGroup rightMotors({8, 9, 17}, pros::MotorGearset::blue);
 
 // INTAKE = port 7
 pros::Motor intake(1, pros::MotorGearset::blue);
@@ -191,7 +190,7 @@ void run_selected_auton();
 
 void initialize() {
     pros::lcd::initialize(); // initialize brain screen
-    start_autoselector();
+    // start_autoselector();
     chassis.calibrate(); // calibrate sensors
 
     // the default rate is 50. however, if you need to change the rate, you
@@ -313,6 +312,9 @@ void right_autonomous() {
     pros::delay(3600);
     intake.move(0);
     outtake.move(0);
+    pros::delay(500);
+    chassis.moveToPoint(0, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
+    chassis.waitUntilDone();
 }
 
 void skills_autonomous() {
@@ -324,67 +326,97 @@ void skills_autonomous() {
 
 
     chassis.setPose(0,0,0);
-    pros::delay(100);
-    chassis.moveToPose(0, 39, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
+    pros::delay(150);
+    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
     chassis.turnToHeading(90, 700);
-    pros::delay(500);
+    pros::delay(600);
     pistonC.set_value(true);
-    pros::delay(500);
+    pros::delay(600);
     // move to right matchloader
-    chassis.moveToPoint(20, 39, 1100, {.maxSpeed = 80});
+    chassis.moveToPoint(18, 42, 1100, {.maxSpeed = 80});
     chassis.waitUntilDone();
     // intake the loads
     intake.move(127);
     pros::delay(2400);
     intake.move(40);
     
-    chassis.moveToPoint(10, 39, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    // move partway to right long goal
+    chassis.moveToPoint(0, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
-    
+    pros::delay(600);
+    // turn to face the wall
     chassis.turnToHeading(0, 700);
     chassis.waitUntilDone();
-
-    chassis.moveToPoint(10, 46, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    pros::delay(600);
+    // move to the wall
+    chassis.moveToPoint(0, 52, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
+    pros::delay(600);
 
+    // turn to move straight to the opposite end of the field
     chassis.turnToHeading(90, 700);
-
-    chassis.moveToPoint(70, 44, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
-
+    pros::delay(600);
+    // move to opposite end of the field
+    chassis.moveToPoint(-103, 52, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.waitUntilDone();
+    pros::delay(600);
+    // turn to go straight to turn to the opposite matchloader
     chassis.turnToHeading(0, 700);
     chassis.waitUntilDone();
-
+    pros::delay(600);
     // move to partway of opposite matchloader to outtake the loads from first matchloader in the right long goal
-    chassis.moveToPoint(70, 39, 1200, {.maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(-103, 42, 1200, {.maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
+    pros::delay(600);
 
     // face the long goal to outtake the loads from the first matchloader
-    chassis.turnToHeading(-90, 700);
+    chassis.turnToHeading(270, 700);
     chassis.waitUntilDone();
+    pros::delay(600);
 
     // outtake the loads form previous matchloader in the right long goal from opposite end
-    chassis.moveToPoint(60, 39, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(-93, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
+    outtake.move(127);
+    pros::delay(2400);
+    outtake.move(0);
+    pros::delay(600);
 
     // intake the loads from opposite match loader
     intake.move(127);
-    chassis.moveToPoint(80, 39, 1200, {.maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(-113, 42, 1200, {.maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
     intake.move(40);
 
     // outtake the loads in the right long goal
-    chassis.moveToPoint(60, 39, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(-93, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
     chassis.waitUntilDone();
-
+    pros::delay(600);
+    // score the loads in the opposite end of right long goal
     intake.move(127);
     outtake.move(127);
     pros::delay(3600);
     intake.move(0);
     outtake.move(0);
+    pros::delay(500);
 
+    // move mid of match loader and long goal to turn to clear red park zone
+    chassis.moveToPoint(-103, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.waitUntilDone();
+    pros::delay(600);
+
+    // turn to clear red park zone
+    chassis.turnToHeading(0, 700);
+    chassis.waitUntilDone();
+    pros::delay(600);
+
+    // move a few inches to turn and after clear red park zone
+    chassis.moveToPoint(-103, 26, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.waitUntilDone();
+    pros::delay(600);
 }
 
 void solo_awp_autonomous() {
@@ -393,7 +425,7 @@ void solo_awp_autonomous() {
 }
 
 void autonomous() {
-    run_selected_auton();
+    right_autonomous();
 }
 
 bool pistonAState = false;
