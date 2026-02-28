@@ -29,11 +29,11 @@ pros::Motor intake(1, pros::MotorGearset::blue);
 pros::Motor outtake(15, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
-pros::Imu imu(19);
+pros::Imu imu(-19);
 
 // tracking wheels
-// vertical tracking wheel encoder. Rotation sensor, port 12, reversed
-pros::Rotation verticalEnc(-18);
+// vertical tracking wheel encoder. Rotation sensor, port 18
+pros::Rotation verticalEnc(18);
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0);
 
@@ -317,6 +317,12 @@ void right_autonomous() {
     chassis.waitUntilDone();
 }
 
+void test_autonomous() {
+    // example of a simple autonomous routine that just moves the robot forward
+    chassis.setPose(-50,-7,0);
+    chassis.moveToPoint(-50, -17, 1200);
+    chassis.waitUntilDone();
+}
 void skills_autonomous() {
     bool pistonAState = false;
     bool lastButtonState = false;
