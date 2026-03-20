@@ -29,11 +29,11 @@ pros::Motor intake(1, pros::MotorGearset::blue);
 pros::Motor outtake(15, pros::MotorGearset::blue);
 
 // Inertial Sensor on port 10
-pros::Imu imu(-19);
+pros::Imu imu(19);
 
 // tracking wheels
 // vertical tracking wheel encoder. Rotation sensor, port 18
-pros::Rotation verticalEnc(18);
+pros::Rotation verticalEnc(-18);
 // vertical tracking wheel. 2.75" diameter, 2.5" offset, left of the robot (negative)
 lemlib::TrackingWheel vertical(&verticalEnc, lemlib::Omniwheel::NEW_2, 0);
 
@@ -261,24 +261,40 @@ void left_autonomous() {
     chassis.moveToPose(0, 39, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
     // align to matchloader
-    chassis.turnToHeading(270, 1200);
-    pros::delay(500);
+    chassis.turnToHeading(270, 500);
+    pros::delay(200);
     pistonC.set_value(true);
-    pros::delay(500);
+    pros::delay(200);
     // move to left matchloader
-    chassis.moveToPoint(-14, 39, 1200, {.maxSpeed = 80});
+    chassis.moveToPoint(-17, 39, 1050, {.maxSpeed = 80});
     chassis.waitUntilDone();
     intake.move(127);
-    pros::delay(2400);
+    pros::delay(1500);
     chassis.waitUntilDone();
     // move to left long goal
-    chassis.moveToPoint(26, 39, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
+    chassis.moveToPoint(26, 39, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 90});
     chassis.waitUntilDone();
     // outtake the loads
     outtake.move(127);
-    pros::delay(2400);
+    pros::delay(2000);
     intake.move(0);
     outtake.move(0);
+
+    chassis.moveToPoint(0, 39, 700);
+    chassis.waitUntilDone();
+    pros::delay(100);
+    chassis.turnToHeading(0, 500);
+    chassis.waitUntilDone();
+    pros::delay(100);
+    chassis.moveToPoint(0, 17, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 90});
+    chassis.waitUntilDone();
+    pros::delay(100);
+    chassis.turnToHeading(90, 500);
+    chassis.waitUntilDone();
+    pros::delay(100);
+    intake.move(127);
+    chassis.moveToPoint(30, 17, 1200);
+    chassis.waitUntilDone();
 }
 
 void right_autonomous() {
@@ -319,9 +335,14 @@ void right_autonomous() {
 
 void test_autonomous() {
     // example of a simple autonomous routine that just moves the robot forward
-    chassis.setPose(-50,-7,0);
-    chassis.moveToPoint(-50, -17, 1200);
+    chassis.setPose(0,0,0);
+    pros::delay(100);
+    chassis.moveToPoint(0, -10, 1200);
     chassis.waitUntilDone();
+    pros::delay(1200);
+    chassis.turnToHeading(270, 1200);
+    chassis.moveToPoint(-5, -10, 1200);
+
 }
 void skills_autonomous() {
     bool pistonAState = false;
@@ -431,7 +452,7 @@ void solo_awp_autonomous() {
 }
 
 void autonomous() {
-    right_autonomous();
+    left_autonomous();
 }
 
 bool pistonAState = false;
@@ -448,7 +469,7 @@ void opcontrol() {
     bool pistA = false;   // state of piston A (UP arrow)
     bool lastUp = false;  // last state of UP button
 
-    bool pistB = false;   // state of piston B (A button)
+    bool pistB = false;   // state of piston B (L1 hold)
     bool lastA = false;   // last state of A button
 
     bool pistC = false;   // state of piston C (DOWN arrow)
@@ -476,41 +497,32 @@ void opcontrol() {
         leftMotors.move(leftPower);
         rightMotors.move(rightPower);
 
-        // ==========================================
-        // INTAKE (R2 = forward, R1 = reverse)
-        // ==========================================
-        if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-            intake.move(100);
-        }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-            intake.move(-100);
-        }
-        else {
-            intake.move(0);
-        }
+        int intakePower = 0;
+        int outtakePower = 0;
 
-        // ==========================================
-        // OUTTAKE (L2 = forward, L1 = reverse)
-        // ==========================================
         if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-            outtake.move(100);
-        }
-        else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-            outtake.move(-100);
-        }
-        else {
-            outtake.move(0);
+            intakePower = 127;
+            outtakePower = 127;
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+            intakePower = 127;
+            outtakePower = -127;
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
+            intakePower = 127;
+            outtakePower = 0;
+        } else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+            intakePower = -127;
+            outtakePower = 0;
         }
 
+        intake.move(intakePower);
+        outtake.move(outtakePower);
+
         // =============================================
-        // MIDDLE GOAL SCORER PNEUMATIC A (UP ARROW)
+        // MIDDLE GOAL SCORER PNEUMATIC B (L1 HOLD)
         // =============================================
-        bool upNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_UP);
-        if (upNow && !lastUp) {        // just pressed
-            pistB = !pistB;            // toggle state
-            pistonB.set_value(pistB);  // apply
-        }
-        lastUp = upNow;
+        bool l1Now = controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1) || controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN);
+        pistB = l1Now;
+        pistonB.set_value(pistB);
 
         // =============================================
         // DE-SCORE MECH PNEUMATIC B (B BUTTON)
@@ -530,7 +542,7 @@ void opcontrol() {
             pistC = !pistC;                // toggle state
             pistonC.set_value(pistC);      // apply
         }
-        lastDown = bNow;
+        lastDown = bNow;                    
 
         pros::delay(20);
     }
