@@ -345,105 +345,177 @@ void test_autonomous() {
 
 }
 void skills_autonomous() {
-    bool pistonAState = false;
-    bool lastButtonState = false;
-    pros::ADIDigitalOut pistonA('A'); // de-score mech piston
-    pros::ADIDigitalOut pistonB('B'); // middle goal scorer piston
-    pros::ADIDigitalOut pistonC('C'); // match loader piston
+    // Path
+chassis.setPose(0,0,0);
+// move in front of right matchloader
+chassis.moveToPoint(0, 37.241, 2300, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(90.115, 30);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to right matchloader
+chassis.moveToPoint(16.717, 37.241, 2300, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(270, 30);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to midway of right matchloader and right long goal
+chassis.moveToPoint(0, 37.241, 2300, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(0.717, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to wall beside of right long goal
+chassis.moveToPoint(0, 54.18, 1600, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(270, 30);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to opposite end of right matchloader
+chassis.moveToPoint(-95.051, 54.18, 1500, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(180.33, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move midway to opposite end of right matchloader and right long goal
+chassis.moveToPoint(-95.051, 37.854, 1600, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(89.855, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to opposite end of right long goal and score previously intaked loads
+chassis.moveToPoint(-74.596, 37.81, 2100, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(89.201, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to opposite end matchloader
+chassis.moveToPoint(-111.169, 37.472, 1500);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(89.218, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to opposite end of right long goal
+chassis.moveToPoint(-74.596, 37.81, 2100, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(90.21, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move partway to opposite end of right matchloader and opposite end of right long goal
+chassis.moveToPoint(-95.092, 37.969, 1600);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(35.644, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move before enemy alliance's parking zone
+chassis.moveToPoint(-111.105, 15.861, 1500);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(180.534, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// clear enemy parking zone
+chassis.moveToPoint(-111.105, -33.349, 2000, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(142.608, 500);
+chassis.waitUntilDone();
+pros::delay(200);
+// move partway to opposite end of left long goal and opposite end of left matchloader
+chassis.moveToPoint(-94.391, -56.344, 2300, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(90.985, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to opposite end left matchloader
+chassis.moveToPoint(-111.319, -55.973, 1700);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(91.717, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move partway to opposite end of left long goal and opposite end of left matchloader
+chassis.moveToPoint(-94.61, -56.553, 1600, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(359.223, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to left side wall
+chassis.moveToPoint(-94.504, -68.493, 1600);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(270.11, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to beside left long goal on our side
+chassis.moveToPoint(0, -69.119, 2400);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(358.805, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move partway to left long goal and left matchloader
+chassis.moveToPoint(-0.376, -57.464, 1600, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(270, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to left long goal and score
+chassis.moveToPoint(-20.543, -57.368, 1900, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(268.787, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to left matchloader
+chassis.moveToPoint(16.377, -56.761, 2100);
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(269, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to left long goal and score
+chassis.moveToPoint(-20.543, -57.368, 1900, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(271.54, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move partway to left long goal and left matchloader and align to move before our parking zone
+chassis.moveToPoint(-0.485, -57.866, 1600, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(35.194, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// move to before our parking zone
+chassis.moveToPoint(16.696, -33.748, 1500, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(359.38, 200);
+chassis.waitUntilDone();
+pros::delay(200);
+// clear parking zone and end in it
+chassis.moveToPoint(16.514, -3.9, 2000, {.forwards = false});
+chassis.waitUntilDone();
+pros::delay(200);
+chassis.turnToHeading(0, 200);
+chassis.waitUntilDone();
+pros::delay(200);
 
-
-    chassis.setPose(0,0,0);
-    pros::delay(150);
-    chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
-    chassis.waitUntilDone();
-    // align to matchloader
-    chassis.turnToHeading(90, 700);
-    pros::delay(600);
-    pistonC.set_value(true);
-    pros::delay(600);
-    // move to right matchloader
-    chassis.moveToPoint(18, 42, 1100, {.maxSpeed = 80});
-    chassis.waitUntilDone();
-    // intake the loads
-    intake.move(127);
-    pros::delay(2400);
-    intake.move(40);
-    
-    // move partway to right long goal
-    chassis.moveToPoint(0, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
-    // turn to face the wall
-    chassis.turnToHeading(0, 700);
-    chassis.waitUntilDone();
-    pros::delay(600);
-    // move to the wall
-    chassis.moveToPoint(0, 52, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
-
-    // turn to move straight to the opposite end of the field
-    chassis.turnToHeading(90, 700);
-    chassis.waitUntilDone();
-    pros::delay(600);
-    // move to opposite end of the field
-    chassis.moveToPoint(-103, 52, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
-    // turn to go straight to turn to the opposite matchloader
-    chassis.turnToHeading(0, 700);
-    chassis.waitUntilDone();
-    pros::delay(600);
-    // move to partway of opposite matchloader to outtake the loads from first matchloader in the right long goal
-    chassis.moveToPoint(-103, 42, 1200, {.maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
-
-    // face the long goal to outtake the loads from the first matchloader
-    chassis.turnToHeading(270, 700);
-    chassis.waitUntilDone();
-    pros::delay(600);
-
-    // outtake the loads form previous matchloader in the right long goal from opposite end
-    chassis.moveToPoint(-93, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    outtake.move(127);
-    pros::delay(2400);
-    outtake.move(0);
-    pros::delay(600);
-
-    // intake the loads from opposite match loader
-    intake.move(127);
-    chassis.moveToPoint(-113, 42, 1200, {.maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    intake.move(40);
-
-    // outtake the loads in the right long goal
-    chassis.moveToPoint(-93, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
-    // score the loads in the opposite end of right long goal
-    intake.move(127);
-    outtake.move(127);
-    pros::delay(3600);
-    intake.move(0);
-    outtake.move(0);
-    pros::delay(500);
-
-    // move mid of match loader and long goal to turn to clear red park zone
-    chassis.moveToPoint(-103, 42, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
-
-    // turn to clear red park zone
-    chassis.turnToHeading(0, 700);
-    chassis.waitUntilDone();
-    pros::delay(600);
-
-    // move a few inches to turn and after clear red park zone
-    chassis.moveToPoint(-103, 26, 1200, {.forwards = false, .maxSpeed = 100, .minSpeed = 50});
-    chassis.waitUntilDone();
-    pros::delay(600);
 }
 
 void solo_awp_autonomous() {
