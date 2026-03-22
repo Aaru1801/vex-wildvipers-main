@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "heheeheh",
+    "project_name": "Aarav_Auton",
     "target": "v5",
     "templates": {
       "LemLib": {
@@ -634,7 +634,10 @@
         "version": "9.2.0"
       }
     },
-    "upload_options": {},
+    "upload_options": {
+      "description": "Auton code for team 8433V",
+      "icon": "robot"
+    },
     "use_early_access": false
   }
 }

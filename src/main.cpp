@@ -243,6 +243,15 @@ void disabled() {}
  */
 void competition_initialize() {}
 
+int savedCount = 0;
+
+void storePosition() {
+    const auto pose = chassis.getPose();
+    controller.print(0, 0, "X:%.1f Y:%.1f", pose.x, pose.y);
+    controller.print(0, 1, "T:%.1f #%d", pose.theta, savedCount + 1);
+    savedCount++;
+}
+
 /**
  * Runs during auto
  *
@@ -336,185 +345,211 @@ void right_autonomous() {
 void test_autonomous() {
     // example of a simple autonomous routine that just moves the robot forward
     chassis.setPose(0,0,0);
-    pros::delay(100);
-    chassis.moveToPoint(0, -10, 1200);
+    chassis.turnToHeading(90, 500);
     chassis.waitUntilDone();
-    pros::delay(1200);
-    chassis.turnToHeading(270, 1200);
-    chassis.moveToPoint(-5, -10, 1200);
-
 }
 void skills_autonomous() {
     // Path
+bool pistonAState = false;
+bool lastButtonState = false;
+pros::ADIDigitalOut pistonA('A'); // de-score mech piston
+pros::ADIDigitalOut pistonB('B'); // middle goal scorer piston
+pros::ADIDigitalOut pistonC('C'); // match loader piston
+
+
 chassis.setPose(0,0,0);
-// move in front of right matchloader
-chassis.moveToPoint(0, 37.241, 2300, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
+pros::delay(100);
+chassis.moveToPose(0, 42, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(90.115, 30);
-chassis.waitUntilDone();
-pros::delay(200);
+// align to matchloader
+chassis.turnToHeading(90, 1200);
+pros::delay(500);
+pistonC.set_value(true);
+pros::delay(500);
 // move to right matchloader
-chassis.moveToPoint(16.717, 37.241, 2300, {.forwards = false});
+chassis.moveToPoint(15, 42, 1100, {.maxSpeed = 80});
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(270, 30);
-chassis.waitUntilDone();
-pros::delay(200);
+// intake the loads
+intake.move(127);
+pros::delay(2400);
+intake.move(0);
+pros::delay(300);
 // move to midway of right matchloader and right long goal
-chassis.moveToPoint(0, 37.241, 2300, {.forwards = false});
+chassis.moveToPoint(0, 42, 1000, {.forwards = false});
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(0.717, 200);
+pros::delay(500);
+pistonC.set_value(false);
+pros::delay(900);
+chassis.turnToHeading(0, 400);
 chassis.waitUntilDone();
 pros::delay(200);
 // move to wall beside of right long goal
-chassis.moveToPoint(0, 54.18, 1600, {.forwards = false});
+chassis.moveToPoint(0, 57.5, 1200, {.maxSpeed = 100, .minSpeed = 80});
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(270, 30);
+pros::delay(400);
+chassis.turnToPoint(-100, 55.5, 500, {.forwards = false});
 chassis.waitUntilDone();
-pros::delay(200);
+pros::delay(400);
 // move to opposite end of right matchloader
-chassis.moveToPoint(-95.051, 54.18, 1500, {.forwards = false});
+chassis.moveToPoint(-100, 57.5, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(180.33, 200);
+pros::delay(450);
+chassis.turnToHeading(0, 650);
 chassis.waitUntilDone();
-pros::delay(200);
+pros::delay(450);
 // move midway to opposite end of right matchloader and right long goal
-chassis.moveToPoint(-95.051, 37.854, 1600, {.forwards = false});
+chassis.moveToPoint(-100, 35.7, 1600, {.forwards = false});
 chassis.waitUntilDone();
 pros::delay(200);
-chassis.turnToHeading(89.855, 200);
+chassis.turnToHeading(270, 350);
 chassis.waitUntilDone();
 pros::delay(200);
 // move to opposite end of right long goal and score previously intaked loads
-chassis.moveToPoint(-74.596, 37.81, 2100, {.forwards = false});
+chassis.moveToPoint(-74.596, 35.7, 2100, {.forwards = false});
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(89.201, 200);
-chassis.waitUntilDone();
-pros::delay(200);
+pros::delay(300);
+// outtake the loads
+intake.move(127);
+outtake.move(127);
+pros::delay(2400);
+outtake.move(0);
+intake.move(0);
+// put matchloader piston down to intake next loads
+pros::delay(500);
+pistonC.set_value(true);
+pros::delay(500);
 // move to opposite end matchloader
-chassis.moveToPoint(-111.169, 37.472, 1500);
+chassis.moveToPoint(-110.761, 35.7, 1500);
 chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(89.218, 200);
+pros::delay(300);
+// intake the loads
+intake.move(127);
+pros::delay(2400);
+intake.move(0);
+pros::delay(400);
+// move to opposite end of right long goal and score intaked loads
+chassis.moveToPoint(-74.596, 36.7, 2100, {.forwards = false});
 chassis.waitUntilDone();
-pros::delay(200);
-// move to opposite end of right long goal
-chassis.moveToPoint(-74.596, 37.81, 2100, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(90.21, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move partway to opposite end of right matchloader and opposite end of right long goal
-chassis.moveToPoint(-95.092, 37.969, 1600);
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(35.644, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move before enemy alliance's parking zone
-chassis.moveToPoint(-111.105, 15.861, 1500);
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(180.534, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// clear enemy parking zone
-chassis.moveToPoint(-111.105, -33.349, 2000, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(142.608, 500);
-chassis.waitUntilDone();
-pros::delay(200);
-// move partway to opposite end of left long goal and opposite end of left matchloader
-chassis.moveToPoint(-94.391, -56.344, 2300, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(90.985, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to opposite end left matchloader
-chassis.moveToPoint(-111.319, -55.973, 1700);
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(91.717, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move partway to opposite end of left long goal and opposite end of left matchloader
-chassis.moveToPoint(-94.61, -56.553, 1600, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(359.223, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to left side wall
-chassis.moveToPoint(-94.504, -68.493, 1600);
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(270.11, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to beside left long goal on our side
-chassis.moveToPoint(0, -69.119, 2400);
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(358.805, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move partway to left long goal and left matchloader
-chassis.moveToPoint(-0.376, -57.464, 1600, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(270, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to left long goal and score
-chassis.moveToPoint(-20.543, -57.368, 1900, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(268.787, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to left matchloader
-chassis.moveToPoint(16.377, -56.761, 2100);
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(269, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to left long goal and score
-chassis.moveToPoint(-20.543, -57.368, 1900, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(271.54, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move partway to left long goal and left matchloader and align to move before our parking zone
-chassis.moveToPoint(-0.485, -57.866, 1600, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(35.194, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// move to before our parking zone
-chassis.moveToPoint(16.696, -33.748, 1500, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(359.38, 200);
-chassis.waitUntilDone();
-pros::delay(200);
-// clear parking zone and end in it
-chassis.moveToPoint(16.514, -3.9, 2000, {.forwards = false});
-chassis.waitUntilDone();
-pros::delay(200);
-chassis.turnToHeading(0, 200);
-chassis.waitUntilDone();
-pros::delay(200);
+pros::delay(300);
+pros::delay(300);
+// outtake the loads
+intake.move(127);
+outtake.move(127);
+pros::delay(2400);
+outtake.move(0);
+intake.move(0);
+// // move to opposite end of right long goal
+// chassis.moveToPoint(-74.596, 37.81, 2100, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(90.21, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move partway to opposite end of right matchloader and opposite end of right long goal
+// chassis.moveToPoint(-95.092, 37.969, 1600);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(35.644, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move before enemy alliance's parking zone
+// chassis.moveToPoint(-111.105, 15.861, 1500);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(180.534, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // clear enemy parking zone
+// chassis.moveToPoint(-111.105, -33.349, 2000, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(142.608, 500);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move partway to opposite end of left long goal and opposite end of left matchloader
+// chassis.moveToPoint(-94.391, -56.344, 2300, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(90.985, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to opposite end left matchloader
+// chassis.moveToPoint(-111.319, -55.973, 1700);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(91.717, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move partway to opposite end of left long goal and opposite end of left matchloader
+// chassis.moveToPoint(-94.61, -56.553, 1600, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(359.223, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to left side wall
+// chassis.moveToPoint(-94.504, -68.493, 1600);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(270.11, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to beside left long goal on our side
+// chassis.moveToPoint(0, -69.119, 2400);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(358.805, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move partway to left long goal and left matchloader
+// chassis.moveToPoint(-0.376, -57.464, 1600, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(270, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to left long goal and score
+// chassis.moveToPoint(-20.543, -57.368, 1900, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(268.787, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to left matchloader
+// chassis.moveToPoint(16.377, -56.761, 2100);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(269, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to left long goal and score
+// chassis.moveToPoint(-20.543, -57.368, 1900, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(271.54, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move partway to left long goal and left matchloader and align to move before our parking zone
+// chassis.moveToPoint(-0.485, -57.866, 1600, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(35.194, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // move to before our parking zone
+// chassis.moveToPoint(16.696, -33.748, 1500, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(359.38, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
+// // clear parking zone and end in it
+// chassis.moveToPoint(16.514, -3.9, 2000, {.forwards = false});
+// chassis.waitUntilDone();
+// pros::delay(200);
+// chassis.turnToHeading(0, 200);
+// chassis.waitUntilDone();
+// pros::delay(200);
 
 }
 
@@ -524,7 +559,7 @@ void solo_awp_autonomous() {
 }
 
 void autonomous() {
-    left_autonomous();
+    skills_autonomous();
 }
 
 bool pistonAState = false;
@@ -546,6 +581,8 @@ void opcontrol() {
 
     bool pistC = false;   // state of piston C (DOWN arrow)
     bool lastDown = false; // last state of DOWN button
+
+    bool lastX = false;   // last state of X button (save coordinates)
 
     const int DEADBAND = 10;  // Helps go straight
 
@@ -614,7 +651,16 @@ void opcontrol() {
             pistC = !pistC;                // toggle state
             pistonC.set_value(pistC);      // apply
         }
-        lastDown = bNow;                    
+        lastDown = bNow;
+
+        // =============================================
+        // SAVE COORDINATES (X BUTTON)
+        // =============================================
+        bool xNow = controller.get_digital(pros::E_CONTROLLER_DIGITAL_X);
+        if (xNow && !lastX) {          // just pressed (rising edge)
+            storePosition();
+        }
+        lastX = xNow;
 
         pros::delay(20);
     }
