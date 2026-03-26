@@ -387,25 +387,25 @@ pros::delay(200);
 chassis.moveToPoint(0, 57.5, 1200, {.maxSpeed = 100, .minSpeed = 80});
 chassis.waitUntilDone();
 pros::delay(400);
-chassis.turnToPoint(-100, 55.5, 500, {.forwards = false});
+chassis.turnToPoint(-93.1, 55.5, 500, {.forwards = false});
 chassis.waitUntilDone();
 pros::delay(400);
 // move to opposite end of right matchloader
-chassis.moveToPoint(-100, 57.5, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
+chassis.moveToPoint(-93.1, 57.5, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
 chassis.waitUntilDone();
 pros::delay(450);
-chassis.turnToHeading(0, 650);
+chassis.turnToPoint(-93.1, 42, 500, {.forwards = false});
 chassis.waitUntilDone();
 pros::delay(450);
 // move midway to opposite end of right matchloader and right long goal
-chassis.moveToPoint(-100, 35.7, 1600, {.forwards = false});
+chassis.moveToPoint(-93.1, 42, 1600, {.forwards = false});
 chassis.waitUntilDone();
 pros::delay(200);
 chassis.turnToHeading(270, 350);
 chassis.waitUntilDone();
 pros::delay(200);
 // move to opposite end of right long goal and score previously intaked loads
-chassis.moveToPoint(-74.596, 35.7, 2100, {.forwards = false});
+chassis.moveToPoint(-84.596, 42, 2100, {.forwards = false});
 chassis.waitUntilDone();
 pros::delay(300);
 // outtake the loads
@@ -419,7 +419,7 @@ pros::delay(500);
 pistonC.set_value(true);
 pros::delay(500);
 // move to opposite end matchloader
-chassis.moveToPoint(-110.761, 35.7, 1500);
+chassis.moveToPoint(-111.761, 36.5, 1500);
 chassis.waitUntilDone();
 pros::delay(300);
 // intake the loads
@@ -428,7 +428,7 @@ pros::delay(2400);
 intake.move(0);
 pros::delay(400);
 // move to opposite end of right long goal and score intaked loads
-chassis.moveToPoint(-74.596, 36.7, 2100, {.forwards = false});
+chassis.moveToPoint(-84.596, 36.5, 2100, {.forwards = false});
 chassis.waitUntilDone();
 pros::delay(300);
 pros::delay(300);
@@ -438,13 +438,6 @@ outtake.move(127);
 pros::delay(2400);
 outtake.move(0);
 intake.move(0);
-// // move to opposite end of right long goal
-// chassis.moveToPoint(-74.596, 37.81, 2100, {.forwards = false});
-// chassis.waitUntilDone();
-// pros::delay(200);
-// chassis.turnToHeading(90.21, 200);
-// chassis.waitUntilDone();
-// pros::delay(200);
 // // move partway to opposite end of right matchloader and opposite end of right long goal
 // chassis.moveToPoint(-95.092, 37.969, 1600);
 // chassis.waitUntilDone();
