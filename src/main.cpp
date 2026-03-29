@@ -406,10 +406,10 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.moveToPoint(-99.1, 41, 1600, {.forwards = false});
     chassis.waitUntilDone();
     // turn to face opposite side right long goal
-    chassis.turnToPoint(-84, 37, 600, {.forwards = false});
+    chassis.turnToPoint(-81, 36, 600, {.forwards = false});
     chassis.waitUntilDone();
     // move to opposite end of right long goal and score previously intaked loads
-    chassis.moveToPoint(-84, 37, 1000, {.forwards = false});
+    chassis.moveToPoint(-81, 36, 1000, {.forwards = false});
     chassis.waitUntilDone();
     // outtake the loads
     intake.move(127);
@@ -423,12 +423,12 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pros::delay(350);
     intake.move(127);
     // move to opposite end matchloader
-    chassis.moveToPoint(-114, 37, 1500, {.maxSpeed = 80});
+    chassis.moveToPoint(-114, 37.5, 1500, {.maxSpeed = 80});
     chassis.waitUntilDone();
     pros::delay(2450);
     intake.move(0);
     // move to opposite end of right long goal and score intaked loads
-    chassis.moveToPoint(-84, 37, 1450, {.forwards = false});
+    chassis.moveToPoint(-81, 36.5, 1450, {.forwards = false});
     chassis.waitUntilDone();
     pros::delay(450);
     // outtake the loads
@@ -450,7 +450,7 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.turnToPoint(-91, -65, 500, {.forwards = false});
     chassis.waitUntilDone();
     // move midway to the opposite side left long goal
-    chassis.moveToPoint(-91, -63.5, 2000, {.forwards = false});
+    chassis.moveToPoint(-91, -61, 2000, {.forwards = false});
     chassis.waitUntilDone();
     // turn to front face the opposite side left match loader
     chassis.turnToHeading(270, 600);
@@ -460,7 +460,7 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pistonC.set_value(true);
     pros::delay(350);
     // go to opposite side left matchloader
-    chassis.moveToPoint(-114, -63.5, 600);
+    chassis.moveToPoint(-114, -59, 600);
     chassis.waitUntilDone();
     // intake the loads
     intake.move(127);
@@ -468,7 +468,7 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     intake.move(0);
     pros::delay(150);
     // move to midway to opposite side of left matchloader and left long goal
-    chassis.moveToPoint(-91, -63.5, 1600, {.forwards = false});
+    chassis.moveToPoint(-91, -59, 1600, {.forwards = false});
     chassis.waitUntilDone();
     pros::delay(150);
     pistonC.set_value(false);
@@ -494,9 +494,9 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.moveToPoint(-3, -65, 1600, {.forwards = false});
     chassis.waitUntilDone();
     pros::delay(350);
-    chassis.turnToPoint(-14, -65, 500, {.forwards = false});
+    chassis.turnToPoint(-14, -63, 500, {.forwards = false});
     chassis.waitUntilDone();
-    chassis.moveToPoint(-14, -65, 1600, {.forwards = false});
+    chassis.moveToPoint(-14, -63.5, 1600, {.forwards = false});
     chassis.waitUntilDone();
     // outtake the loads
     intake.move(127);
@@ -510,13 +510,13 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pros::delay(350);
     // move to left matchloader
     intake.move(127);
-    chassis.moveToPoint(23, -64, 1200, {.maxSpeed = 100});
+    chassis.moveToPoint(26, -63, 1200, {.maxSpeed = 100});
     chassis.waitUntilDone();
     pros::delay(2350);
     intake.move(0);
     pros::delay(150);
     // move to left long goal and score the loads
-    chassis.moveToPoint(-12, -63.5, 1200, {.forwards = false});
+    chassis.moveToPoint(-12, -61, 1200, {.forwards = false});
     chassis.waitUntilDone();
     // outtake the loads
     intake.move(127);
@@ -529,14 +529,15 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.moveToPoint(1, -65, 1600);
     chassis.waitUntilDone();
     // turn to face the turn before park zone
-    chassis.turnToPoint(16, -20, 500, {.forwards = false});
+    chassis.turnToPoint(22, -20, 500, {.forwards = false});
     chassis.waitUntilDone();
     // move to the turn before park zone
-    chassis.moveToPoint(16, -20, 1200, {.forwards = false});
+    chassis.moveToPoint(22, -20, 1200, {.forwards = false});
     chassis.waitUntilDone();
     // move to park zone
-    chassis.moveToPoint(16, -5, 1200, {.forwards =  false});
+    chassis.turnToHeading(180, 500);
     chassis.waitUntilDone();
+    chassis.moveToPoint(22, 1, 1200, {.forwards = false});
 }
 
 void solo_awp_autonomous() {
