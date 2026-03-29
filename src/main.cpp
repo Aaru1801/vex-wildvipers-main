@@ -362,21 +362,23 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
 // RIGHT SIDE STARTS HERE!!!!!
 // ==========================
     chassis.setPose(0,0,0);
-    pros::delay(250);
-    chassis.moveToPoint(0, 42, 1200, {.maxSpeed = 100});
+    pros::delay(100);
+    chassis.moveToPose(0, 43.5, 0, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
-    pros::delay(150);
     // align to matchloader
-    chassis.turnToPoint(17, 42, 1100);
-    chassis.waitUntilDone();
+    chassis.turnToPoint(21, 42, 600, {.maxSpeed = 100});
     pros::delay(500);
     pistonC.set_value(true);
     pros::delay(500);
     intake.move(127);
     // move to right matchloader
-    chassis.moveToPoint(17, 42, 1100, {.maxSpeed = 90});
+    chassis.moveToPoint(20, 42, 1100, {.maxSpeed = 100});
     chassis.waitUntilDone();
-    pros::delay(2500);
+    leftMotors.move(50);
+    rightMotors.move(50);
+    pros::delay(2400);
+    leftMotors.move(0);
+    rightMotors.move(0);
     intake.move(0);
     // move to midway of right matchloader and right long goal
     chassis.moveToPoint(0, 42, 1000, {.forwards = false});
@@ -387,13 +389,13 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.turnToHeading(0, 400);
     chassis.waitUntilDone();
     // move to wall beside of right long goal
-    chassis.moveToPoint(0, 57.5, 1200, {.maxSpeed = 100, .minSpeed = 80});
+    chassis.moveToPoint(0, 56.5, 1200, {.maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
     // turn to face opposite side beside the right long goal
-    chassis.turnToPoint(-93.1, 55.5, 500, {.forwards = false});
+    chassis.turnToPoint(-93.1, 55, 500, {.forwards = false});
     chassis.waitUntilDone();
     // move to opposite end of right matchloader
-    chassis.moveToPoint(-99.1, 56.5, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
+    chassis.moveToPoint(-99.1, 55, 1500, {.forwards = false, .maxSpeed = 100, .minSpeed = 80});
     chassis.waitUntilDone();
 
     // turn to face mid way of opposite side right matchloader and right long goal
@@ -404,10 +406,10 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.moveToPoint(-99.1, 41, 1600, {.forwards = false});
     chassis.waitUntilDone();
     // turn to face opposite side right long goal
-    chassis.turnToPoint(-85.4, 37, 600, {.forwards = false});
+    chassis.turnToPoint(-84, 37, 600, {.forwards = false});
     chassis.waitUntilDone();
     // move to opposite end of right long goal and score previously intaked loads
-    chassis.moveToPoint(-85.4, 37, 1000, {.forwards = false});
+    chassis.moveToPoint(-84, 37, 1000, {.forwards = false});
     chassis.waitUntilDone();
     // outtake the loads
     intake.move(127);
@@ -421,12 +423,12 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pros::delay(350);
     intake.move(127);
     // move to opposite end matchloader
-    chassis.moveToPoint(-114, 38, 1500);
+    chassis.moveToPoint(-114, 37, 1500, {.maxSpeed = 80});
     chassis.waitUntilDone();
     pros::delay(2450);
     intake.move(0);
     // move to opposite end of right long goal and score intaked loads
-    chassis.moveToPoint(-85.4, 37, 1450, {.forwards = false});
+    chassis.moveToPoint(-84, 37, 1450, {.forwards = false});
     chassis.waitUntilDone();
     pros::delay(450);
     // outtake the loads
@@ -438,17 +440,17 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pros::delay(150);
     pistonC.set_value(false);
     // move back to midway of opposite side right matchloader and right long goal
-    chassis.moveToPoint(-91, 38, 1600);
+    chassis.moveToPoint(-91, 36.5, 1600);
     chassis.waitUntilDone();
 
 // ==========================
 // LEFT SIDE STARTS HERE!!!!!
 // ==========================
     // turn to face opposite side left long goal
-    chassis.turnToPoint(-91, -69, 500, {.forwards = false});
+    chassis.turnToPoint(-91, -65, 500, {.forwards = false});
     chassis.waitUntilDone();
     // move midway to the opposite side left long goal
-    chassis.moveToPoint(-91, -69, 1600, {.forwards = false});
+    chassis.moveToPoint(-91, -63.5, 2000, {.forwards = false});
     chassis.waitUntilDone();
     // turn to front face the opposite side left match loader
     chassis.turnToHeading(270, 600);
@@ -458,7 +460,7 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pistonC.set_value(true);
     pros::delay(350);
     // go to opposite side left matchloader
-    chassis.moveToPoint(-113, -67, 1600);
+    chassis.moveToPoint(-114, -63.5, 600);
     chassis.waitUntilDone();
     // intake the loads
     intake.move(127);
@@ -466,7 +468,7 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     intake.move(0);
     pros::delay(150);
     // move to midway to opposite side of left matchloader and left long goal
-    chassis.moveToPoint(-91, -67, 1600, {.forwards = false});
+    chassis.moveToPoint(-91, -63.5, 1600, {.forwards = false});
     chassis.waitUntilDone();
     pros::delay(150);
     pistonC.set_value(false);
@@ -492,6 +494,10 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     chassis.moveToPoint(-3, -65, 1600, {.forwards = false});
     chassis.waitUntilDone();
     pros::delay(350);
+    chassis.turnToPoint(-14, -65, 500, {.forwards = false});
+    chassis.waitUntilDone();
+    chassis.moveToPoint(-14, -65, 1600, {.forwards = false});
+    chassis.waitUntilDone();
     // outtake the loads
     intake.move(127);
     outtake.move(127);
@@ -504,13 +510,13 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pros::delay(350);
     // move to left matchloader
     intake.move(127);
-    chassis.moveToPoint(17, -64, 1200);
+    chassis.moveToPoint(23, -64, 1200, {.maxSpeed = 100});
     chassis.waitUntilDone();
     pros::delay(2350);
     intake.move(0);
     pros::delay(150);
     // move to left long goal and score the loads
-    chassis.moveToPoint(-3, -65, 1200, {.forwards = false});
+    chassis.moveToPoint(-12, -63.5, 1200, {.forwards = false});
     chassis.waitUntilDone();
     // outtake the loads
     intake.move(127);
