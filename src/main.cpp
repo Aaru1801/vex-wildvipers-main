@@ -428,7 +428,7 @@ pros::ADIDigitalOut pistonC('C'); // match loader piston
     pros::delay(650);
     intake.move(127);
     // move to opposite end matchloader
-    chassis.moveToPoint(-112, 38, 1500);
+    chassis.moveToPoint(-112, 39, 1500);
     chassis.waitUntilDone();
     pros::delay(2450);
     intake.move(0);
